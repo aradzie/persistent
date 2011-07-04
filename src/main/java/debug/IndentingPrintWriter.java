@@ -1,6 +1,8 @@
 package debug;
 
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.LinkedList;
 
@@ -8,6 +10,10 @@ public class IndentingPrintWriter extends Writer {
   private final Writer writer;
   private final LinkedList<String> stack;
   private boolean nl;
+
+  public IndentingPrintWriter(OutputStream out) {
+    this(new OutputStreamWriter(out));
+  }
 
   public IndentingPrintWriter(Writer out) {
     writer = out;

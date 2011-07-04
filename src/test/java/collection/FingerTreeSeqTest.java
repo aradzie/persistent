@@ -28,7 +28,7 @@ public class FingerTreeSeqTest {
         assertEquals(m, (int) t.nth(m));
       }
     }
-    //t.dump(new IndentingPrintWriter(new OutputStreamWriter(System.out)));
+    //t.dump(new IndentingPrintWriter(System.out));
   }
 
   @Test
@@ -42,6 +42,6 @@ public class FingerTreeSeqTest {
         assertEquals(n - m, (int) t.nth(m));
       }
     }
-    //t.dump(new IndentingPrintWriter(new OutputStreamWriter(System.out)));
+    //t.dump(new IndentingPrintWriter(System.out));
   }
 }

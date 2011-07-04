@@ -51,6 +51,7 @@ public class FingerTreeSeq<T> implements Seq<T> {
 
   void dump(IndentingPrintWriter w) {
     root.print(w);
+    w.write("\n");
     w.flush();
   }
 
@@ -98,12 +99,6 @@ public class FingerTreeSeq<T> implements Seq<T> {
 
     abstract Item.Deep<T> snoc(Measured<T> v, Item<T> item, Digit<T> digit);
 
-    static void print(IndentingPrintWriter w, String name, Object... items) {
-      w.write("Digit." + name + "[");
-      FingerTreeSeq.print(w, items);
-      w.write("]");
-    }
-
     static class One<T> extends Digit<T> {
       final Measured<T> a;
       final int v;
@@ -143,7 +138,7 @@ public class FingerTreeSeq<T> implements Seq<T> {
 
       @Override
       public void print(IndentingPrintWriter w) {
-        print(w, getClass().getSimpleName(), a);
+        printDigit(w, "One", this, a);
       }
     }
 
@@ -192,7 +187,7 @@ public class FingerTreeSeq<T> implements Seq<T> {
 
       @Override
       public void print(IndentingPrintWriter w) {
-        print(w, getClass().getSimpleName(), a, b);
+        printDigit(w, "Two", this, a, b);
       }
     }
 
@@ -247,7 +242,7 @@ public class FingerTreeSeq<T> implements Seq<T> {
 
       @Override
       public void print(IndentingPrintWriter w) {
-        print(w, getClass().getSimpleName(), a, b, c);
+        printDigit(w, "Three", this, a, b, c);
       }
     }
 
@@ -314,18 +309,12 @@ public class FingerTreeSeq<T> implements Seq<T> {
 
       @Override
       public void print(IndentingPrintWriter w) {
-        print(w, getClass().getSimpleName(), a, b, c, d);
+        printDigit(w, "Four", this, a, b, c, d);
       }
     }
   }
 
   private abstract static class Node<T> implements Measured<T>, Printable {
-    static void print(IndentingPrintWriter w, Object... items) {
-      w.write("Node(");
-      FingerTreeSeq.print(w, items);
-      w.write(")");
-    }
-
     static class Node2<T> extends Node<T> {
       final Measured<T> a, b;
       final int v;
@@ -360,7 +349,7 @@ public class FingerTreeSeq<T> implements Seq<T> {
 
       @Override
       public void print(IndentingPrintWriter w) {
-        print(w, a, b);
+        printNode(w, "Two", this, a, b);
       }
     }
 
@@ -403,7 +392,7 @@ public class FingerTreeSeq<T> implements Seq<T> {
 
       @Override
       public void print(IndentingPrintWriter w) {
-        print(w, a, b, c);
+        printNode(w, "Three", this, a, b, c);
       }
     }
   }
@@ -485,14 +474,7 @@ public class FingerTreeSeq<T> implements Seq<T> {
 
       @Override
       public void print(IndentingPrintWriter w) {
-        if (v instanceof Printable) {
-          w.write("Single(");
-          ((Printable) v).print(w);
-          w.write(")");
-        }
-        else {
-          w.print(v);
-        }
+        printSingle(w, this);
       }
     }
 
@@ -547,20 +529,37 @@ public class FingerTreeSeq<T> implements Seq<T> {
 
       @Override
       public void print(IndentingPrintWriter w) {
-        w.write("Deep(\n");
-        w.indent("    |");
-        dl.print(w);
-        w.write(";\n");
-        item.print(w);
-        w.write(";\n");
-        dr.print(w);
-        w.unindent();
-        w.write("\n    )");
+        printDeep(w, this);
       }
     }
   }
 
-  private static void print(IndentingPrintWriter w, Object[] items) {
+  private static void printDigit(IndentingPrintWriter w,
+                                 String name, Digit digit, Object... items) {
+    w.write("Digit.");
+    w.write(name);
+    w.write("<");
+    w.write(String.valueOf(digit.size()));
+    w.write(">");
+    w.write("[");
+    printItems(w, items);
+    w.write("]");
+  }
+
+  private static void printNode(IndentingPrintWriter w,
+                                String name, Node node, Object... items) {
+    w.write("Node.");
+    w.write(name);
+    w.write("<");
+    w.write(String.valueOf(node.size()));
+    w.write(">");
+    w.write("[");
+    printItems(w, items);
+    w.write(")");
+  }
+
+  private static void printItems(IndentingPrintWriter w,
+                                 Object[] items) {
     for (int i = 0; i < items.length; i++) {
       if (items[i] instanceof Node) {
         w.write("\n");
@@ -578,5 +577,38 @@ public class FingerTreeSeq<T> implements Seq<T> {
         }
       }
     }
+  }
+
+  private static <T> void printSingle(IndentingPrintWriter w,
+                                      Item.Single<T> single) {
+    if (single.v instanceof Printable) {
+      w.write("Single");
+      w.write("<");
+      w.write(String.valueOf(single.size()));
+      w.write(">");
+      w.write("(");
+      ((Printable) single.v).print(w);
+      w.write(")");
+    }
+    else {
+      w.print(single.v);
+    }
+  }
+
+  private static <T> void printDeep(IndentingPrintWriter w,
+                                    Item.Deep<T> deep) {
+    w.write("Deep");
+    w.write("<");
+    w.write(String.valueOf(deep.size()));
+    w.write(">");
+    w.write("(\n");
+    w.indent("   |");
+    deep.dl.print(w);
+    w.write("\n");
+    deep.item.print(w);
+    w.write("\n");
+    deep.dr.print(w);
+    w.unindent();
+    w.write("\n)");
   }
 }
