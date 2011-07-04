@@ -110,7 +110,7 @@ public class FingerTreeSeq<T> implements Seq<T> {
 
     static void print(IndentingPrintWriter w, String name, Object... items) {
       w.write("Digit." + name + "[");
-      pront(w, items);
+      FingerTreeSeq.print(w, items);
       w.write("]");
     }
 
@@ -332,7 +332,7 @@ public class FingerTreeSeq<T> implements Seq<T> {
   private abstract static class Node implements Measured, Printable {
     static void print(IndentingPrintWriter w, Object... items) {
       w.write("Node(");
-      pront(w, items);
+      FingerTreeSeq.print(w, items);
       w.write(")");
     }
 
@@ -570,7 +570,7 @@ public class FingerTreeSeq<T> implements Seq<T> {
     }
   }
 
-  private static void pront(IndentingPrintWriter w, Object[] items) {
+  private static void print(IndentingPrintWriter w, Object[] items) {
     for (int i = 0; i < items.length; i++) {
       if (items[i] instanceof Node) {
         w.write("\n");
