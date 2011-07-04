@@ -15,8 +15,9 @@ public class FingerTreeSeq<T> implements Seq<T> {
   }
 
   @Override
+  @SuppressWarnings({"unchecked"})
   public T head() throws EmptyException {
-    throw new UnsupportedOperationException();
+    return (T) root.head();
   }
 
   @Override
@@ -59,6 +60,8 @@ public class FingerTreeSeq<T> implements Seq<T> {
     int size();
 
     Object nth(int index);
+
+    Object head();
   }
 
   private static class Elem implements Measured, Printable {
@@ -79,6 +82,11 @@ public class FingerTreeSeq<T> implements Seq<T> {
         return e;
       }
       throw new RangeException();
+    }
+
+    @Override
+    public Object head() {
+      return e;
     }
 
     @Override
@@ -139,6 +147,11 @@ public class FingerTreeSeq<T> implements Seq<T> {
       }
 
       @Override
+      public Object head() {
+        return a.head();
+      }
+
+      @Override
       public void print(IndentingPrintWriter w) {
         print(w, getClass().getSimpleName(), a);
       }
@@ -180,6 +193,11 @@ public class FingerTreeSeq<T> implements Seq<T> {
           return b.nth(index);
         }
         throw new RangeException();
+      }
+
+      @Override
+      public Object head() {
+        return b.head();
       }
 
       @Override
@@ -230,6 +248,11 @@ public class FingerTreeSeq<T> implements Seq<T> {
           return c.nth(index);
         }
         throw new RangeException();
+      }
+
+      @Override
+      public Object head() {
+        return c.head();
       }
 
       @Override
@@ -295,6 +318,11 @@ public class FingerTreeSeq<T> implements Seq<T> {
       }
 
       @Override
+      public Object head() {
+        return d.head();
+      }
+
+      @Override
       public void print(IndentingPrintWriter w) {
         print(w, getClass().getSimpleName(), a, b, c, d);
       }
@@ -336,6 +364,11 @@ public class FingerTreeSeq<T> implements Seq<T> {
       }
 
       @Override
+      public Object head() {
+        return b.head();
+      }
+
+      @Override
       public void print(IndentingPrintWriter w) {
         print(w, a, b);
       }
@@ -374,6 +407,11 @@ public class FingerTreeSeq<T> implements Seq<T> {
       }
 
       @Override
+      public Object head() {
+        return c.head();
+      }
+
+      @Override
       public void print(IndentingPrintWriter w) {
         print(w, a, b, c);
       }
@@ -404,6 +442,11 @@ public class FingerTreeSeq<T> implements Seq<T> {
       @Override
       public Object nth(int index) {
         throw new RangeException();
+      }
+
+      @Override
+      public Object head() {
+        throw new EmptyException();
       }
 
       @Override
@@ -443,6 +486,11 @@ public class FingerTreeSeq<T> implements Seq<T> {
       @Override
       public Object nth(int index) {
         return v.nth(index);
+      }
+
+      @Override
+      public Object head() {
+        return v.head();
       }
 
       @Override
@@ -500,6 +548,11 @@ public class FingerTreeSeq<T> implements Seq<T> {
           return dr.nth(index);
         }
         throw new RangeException();
+      }
+
+      @Override
+      public Object head() {
+        return dr.head();
       }
 
       @Override
