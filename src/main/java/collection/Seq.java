@@ -1,4 +1,4 @@
-package list;
+package collection;
 
 public interface Seq<T> {
   T head() throws EmptyException;
@@ -20,14 +20,6 @@ public interface Seq<T> {
   }
 
   class RangeException extends IllegalStateException {
-    private final int index;
-
-    public RangeException(int index) {
-      this.index = index;
-    }
-
-    public int getIndex() {
-      return index;
-    }
+    public RangeException() {}
   }
 }

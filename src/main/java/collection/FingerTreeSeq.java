@@ -1,21 +1,53 @@
-package fingertree;
+package collection;
 
 import debug.IndentingPrintWriter;
 import debug.Printable;
 
-public class FingerTree {
-  private Item root = new Item.Empty();
+public class FingerTreeSeq<T> implements Seq<T> {
+  private Item root;
 
-  public void cons(Object v) {
-    root = root.cons(new Elem(v));
+  public FingerTreeSeq() {
+    root = new Item.Empty();
   }
 
-  public void snoc(Object v) {
-    root = root.snoc(new Elem(v));
+  private FingerTreeSeq(Item that) {
+    root = that;
   }
 
+  @Override
+  public T head() throws EmptyException {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public Seq<T> tail() throws EmptyException {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public FingerTreeSeq<T> cons(Object v) {
+    return new FingerTreeSeq<T>(root.cons(new Elem(v)));
+  }
+
+  @Override
+  public FingerTreeSeq<T> snoc(Object v) {
+    return new FingerTreeSeq<T>(root.snoc(new Elem(v)));
+  }
+
+  @Override
+  public Seq<T> concat(Seq<T> that) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
   public int size() {
-    return root.measure();
+    return root.size();
+  }
+
+  @Override
+  @SuppressWarnings({"unchecked"})
+  public T nth(int index) throws RangeException {
+    return (T) root.nth(index);
   }
 
   void dump(IndentingPrintWriter w) {
@@ -24,7 +56,9 @@ public class FingerTree {
   }
 
   private interface Measured {
-    int measure();
+    int size();
+
+    Object nth(int index);
   }
 
   private static class Elem implements Measured, Printable {
@@ -35,8 +69,16 @@ public class FingerTree {
     }
 
     @Override
-    public int measure() {
+    public int size() {
       return 1;
+    }
+
+    @Override
+    public Object nth(int index) {
+      if (index == 0) {
+        return e;
+      }
+      throw new RangeException();
     }
 
     @Override
@@ -53,14 +95,14 @@ public class FingerTree {
     static int measure(Measured... items) {
       int m = 0;
       for (Measured item : items) {
-        m = m + item.measure();
+        m = m + item.size();
       }
       return m;
     }
 
     static void print(IndentingPrintWriter w, String name, Object... items) {
       w.write("Digit." + name + "[");
-      printItems(w, items);
+      pront(w, items);
       w.write("]");
     }
 
@@ -84,8 +126,16 @@ public class FingerTree {
       }
 
       @Override
-      public final int measure() {
+      public final int size() {
         return v;
+      }
+
+      @Override
+      public Object nth(int index) {
+        if (index < a.size()) {
+          return a.nth(index);
+        }
+        throw new RangeException();
       }
 
       @Override
@@ -116,8 +166,20 @@ public class FingerTree {
       }
 
       @Override
-      public final int measure() {
+      public final int size() {
         return v;
+      }
+
+      @Override
+      public Object nth(int index) {
+        if (index < a.size()) {
+          return a.nth(index);
+        }
+        index -= a.size();
+        if (index < b.size()) {
+          return b.nth(index);
+        }
+        throw new RangeException();
       }
 
       @Override
@@ -150,8 +212,24 @@ public class FingerTree {
       }
 
       @Override
-      public final int measure() {
+      public final int size() {
         return v;
+      }
+
+      @Override
+      public Object nth(int index) {
+        if (index < a.size()) {
+          return a.nth(index);
+        }
+        index -= a.size();
+        if (index < b.size()) {
+          return b.nth(index);
+        }
+        index -= b.size();
+        if (index < c.size()) {
+          return c.nth(index);
+        }
+        throw new RangeException();
       }
 
       @Override
@@ -192,8 +270,28 @@ public class FingerTree {
       }
 
       @Override
-      public final int measure() {
+      public final int size() {
         return v;
+      }
+
+      @Override
+      public Object nth(int index) {
+        if (index < a.size()) {
+          return a.nth(index);
+        }
+        index -= a.size();
+        if (index < b.size()) {
+          return b.nth(index);
+        }
+        index -= b.size();
+        if (index < c.size()) {
+          return c.nth(index);
+        }
+        index -= c.size();
+        if (index < d.size()) {
+          return d.nth(index);
+        }
+        throw new RangeException();
       }
 
       @Override
@@ -206,7 +304,7 @@ public class FingerTree {
   private abstract static class Node implements Measured, Printable {
     static void print(IndentingPrintWriter w, Object... items) {
       w.write("Node(");
-      printItems(w, items);
+      pront(w, items);
       w.write(")");
     }
 
@@ -217,12 +315,24 @@ public class FingerTree {
       Node2(Measured a, Measured b) {
         this.a = a;
         this.b = b;
-        v = a.measure() + b.measure();
+        v = a.size() + b.size();
       }
 
       @Override
-      public int measure() {
+      public int size() {
         return v;
+      }
+
+      @Override
+      public Object nth(int index) {
+        if (index < a.size()) {
+          return a.nth(index);
+        }
+        index -= a.size();
+        if (index < b.size()) {
+          return b.nth(index);
+        }
+        throw new RangeException();
       }
 
       @Override
@@ -239,12 +349,28 @@ public class FingerTree {
         this.a = a;
         this.b = b;
         this.c = c;
-        v = a.measure() + b.measure() + c.measure();
+        v = a.size() + b.size() + c.size();
       }
 
       @Override
-      public int measure() {
+      public int size() {
         return v;
+      }
+
+      @Override
+      public Object nth(int index) {
+        if (index < a.size()) {
+          return a.nth(index);
+        }
+        index -= a.size();
+        if (index < b.size()) {
+          return b.nth(index);
+        }
+        index -= b.size();
+        if (index < c.size()) {
+          return c.nth(index);
+        }
+        throw new RangeException();
       }
 
       @Override
@@ -271,8 +397,13 @@ public class FingerTree {
       }
 
       @Override
-      public int measure() {
+      public int size() {
         return 0;
+      }
+
+      @Override
+      public Object nth(int index) {
+        throw new RangeException();
       }
 
       @Override
@@ -305,8 +436,13 @@ public class FingerTree {
       }
 
       @Override
-      public int measure() {
-        return 1;
+      public int size() {
+        return v.size();
+      }
+
+      @Override
+      public Object nth(int index) {
+        return v.nth(index);
       }
 
       @Override
@@ -332,7 +468,7 @@ public class FingerTree {
         this.dl = dl;
         this.item = item;
         this.dr = dr;
-        v = this.dl.measure() + this.item.measure() + this.dr.measure();
+        v = this.dl.size() + this.item.size() + this.dr.size();
       }
 
       @Override
@@ -346,8 +482,24 @@ public class FingerTree {
       }
 
       @Override
-      public int measure() {
+      public int size() {
         return v;
+      }
+
+      @Override
+      public Object nth(int index) {
+        if (index < dl.size()) {
+          return dl.nth(index);
+        }
+        index -= dl.size();
+        if (index < item.size()) {
+          return item.nth(index);
+        }
+        index -= item.size();
+        if (index < dr.size()) {
+          return dr.nth(index);
+        }
+        throw new RangeException();
       }
 
       @Override
@@ -365,7 +517,7 @@ public class FingerTree {
     }
   }
 
-  private static void printItems(IndentingPrintWriter w, Object[] items) {
+  private static void pront(IndentingPrintWriter w, Object[] items) {
     for (int i = 0; i < items.length; i++) {
       if (items[i] instanceof Node) {
         w.write("\n");
