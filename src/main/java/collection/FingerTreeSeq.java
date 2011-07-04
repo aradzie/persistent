@@ -98,14 +98,6 @@ public class FingerTreeSeq<T> implements Seq<T> {
 
     abstract Item.Deep<T> snoc(Measured<T> v, Item<T> item, Digit<T> digit);
 
-    static int measure(Measured... items) {
-      int m = 0;
-      for (Measured item : items) {
-        m = m + item.size();
-      }
-      return m;
-    }
-
     static void print(IndentingPrintWriter w, String name, Object... items) {
       w.write("Digit." + name + "[");
       FingerTreeSeq.print(w, items);
@@ -118,7 +110,7 @@ public class FingerTreeSeq<T> implements Seq<T> {
 
       One(Measured<T> a) {
         this.a = a;
-        v = measure(this.a);
+        v = this.a.size();
       }
 
       @Override
@@ -163,7 +155,7 @@ public class FingerTreeSeq<T> implements Seq<T> {
       Two(Measured<T> a, Measured<T> b) {
         this.a = a;
         this.b = b;
-        v = measure(this.a, this.b);
+        v = this.a.size() + this.b.size();
       }
 
       @Override
@@ -214,7 +206,7 @@ public class FingerTreeSeq<T> implements Seq<T> {
         this.a = a;
         this.b = b;
         this.c = c;
-        v = measure(this.a, this.b, this.c);
+        v = this.a.size() + this.b.size() + this.c.size();
       }
 
       @Override
@@ -271,7 +263,7 @@ public class FingerTreeSeq<T> implements Seq<T> {
         this.b = b;
         this.c = c;
         this.d = d;
-        v = measure(this.a, this.b, this.c, this.d);
+        v = this.a.size() + this.b.size() + this.c.size() + this.d.size();
       }
 
       @Override
