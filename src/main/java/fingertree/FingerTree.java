@@ -19,20 +19,35 @@ public class FingerTree {
     w.flush();
   }
 
+  private static void printItems(IndentingPrintWriter w, Object[] items) {
+    for (int i = 0; i < items.length; i++) {
+      if (items[i] instanceof Node) {
+        w.write("\n");
+        w.indent("   ");
+        Printable.Util.print(w, items[i]);
+        if (i < items.length - 1) {
+          w.write(",");
+        }
+        w.unindent();
+      }
+      else {
+        Printable.Util.print(w, items[i]);
+        if (i < items.length - 1) {
+          w.write(",");
+        }
+      }
+    }
+  }
+
   private abstract static class Digit implements Printable {
     abstract Item.Deep cons(Digit digit, Item item, Object v);
 
     abstract Item.Deep snoc(Object v, Item item, Digit digit);
 
     void print(IndentingPrintWriter w, Object... items) {
-      w.print("Digit." + getClass().getSimpleName() + "[");
-      for (int i = 0; i < items.length; i++) {
-        if (i > 0) {
-          w.print(",");
-        }
-        Printable.Util.print(w, items[i]);
-      }
-      w.print("]");
+      w.write("Digit." + getClass().getSimpleName() + "[");
+      printItems(w, items);
+      w.write("]");
     }
 
     static class One extends Digit {
@@ -147,15 +162,10 @@ public class FingerTree {
   }
 
   private abstract static class Node implements Printable {
-    void print(IndentingPrintWriter w, Object... items) {
-      w.print("Node(");
-      for (int i = 0; i < items.length; i++) {
-        if (i > 0) {
-          w.print(",");
-        }
-        Printable.Util.print(w, items[i]);
-      }
-      w.print(")");
+    static void print(IndentingPrintWriter w, Object... items) {
+      w.write("Node(");
+      printItems(w, items);
+      w.write(")");
     }
 
     static class Node2 extends Node {
@@ -206,7 +216,7 @@ public class FingerTree {
 
       @Override
       public void print(IndentingPrintWriter w) {
-        w.print("[EMPTY]");
+        w.write("[EMPTY]");
       }
     }
 
@@ -236,9 +246,9 @@ public class FingerTree {
       @Override
       public void print(IndentingPrintWriter w) {
         if (v instanceof Printable) {
-          w.print("Single(");
+          w.write("Single(");
           ((Printable) v).print(w);
-          w.print(")");
+          w.write(")");
         }
         else {
           w.print(v);
@@ -269,15 +279,15 @@ public class FingerTree {
 
       @Override
       public void print(IndentingPrintWriter w) {
-        w.print("Deep(\n");
-        w.indent("   |");
+        w.write("Deep(\n");
+        w.indent("    |");
         dl.print(w);
-        w.print(";\n");
+        w.write(";\n");
         item.print(w);
-        w.print(";\n");
+        w.write(";\n");
         dr.print(w);
         w.unindent();
-        w.print("\n)");
+        w.write("\n    )");
       }
     }
   }
