@@ -67,7 +67,7 @@ public class ForestSeq<T> implements Seq<T> {
   }
 
   public ForestSeq<T> nth(int index, T v) throws RangeException {
-    throw new UnsupportedOperationException();
+    return new ForestSeq<T>(head.nth(index, v));
   }
 
   private static class Tree<T> {
@@ -130,6 +130,18 @@ public class ForestSeq<T> implements Seq<T> {
         return next.nth(index - size);
       }
     }
+
+    Tree<T> nth(int index, T v) {
+      if (size == 0) {
+        throw new RangeException();
+      }
+      if (index < size) {
+        return new Tree<T>(root.nth(size, index, v), size, next);
+      }
+      else {
+        return new Tree<T>(root, size, next.nth(index - size, v));
+      }
+    }
   }
 
   private static class Node<T> {
@@ -146,29 +158,25 @@ public class ForestSeq<T> implements Seq<T> {
       if (index == 0) {
         return v;
       }
+      size = size / 2;
+      if (index <= size) {
+        return l.nth(size, index - 1);
+      }
       else {
-        size = size / 2;
-        if (index <= size) {
-          return l.nth(size, index - 1);
-        }
-        else {
-          return r.nth(size, index - 1 - size);
-        }
+        return r.nth(size, index - 1 - size);
       }
     }
 
-    Node<T> update(int size, int index, T v) {
-      if (size == 0) {
+    Node<T> nth(int size, int index, T v) {
+      if (index == 0) {
         return new Node<T>(v, l, r);
       }
+      size = size / 2;
+      if (index <= size) {
+        return new Node<T>(v, l.nth(size, index - 1, v), r);
+      }
       else {
-        size = size / 2;
-        if (index <= size) {
-          return new Node<T>(v, l.update(size, index - 1, v), r);
-        }
-        else {
-          return new Node<T>(v, l, r.update(size, index - 1 - size, v));
-        }
+        return new Node<T>(v, l, r.nth(size, index - 1 - size, v));
       }
     }
   }

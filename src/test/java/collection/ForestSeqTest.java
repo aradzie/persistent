@@ -42,4 +42,24 @@ public class ForestSeqTest {
       }
     }
   }
+
+  @Test
+  public void update() {
+    ForestSeq<Integer> t = new ForestSeq<Integer>();
+    for (int n = 0; n < 1000; n++) {
+      t = t.cons(n);
+    }
+    for (int n = 0; n < t.size(); n++) {
+      t = t.nth(n, 0);
+    }
+    for (int n = 0; n < t.size(); n++) {
+      assertEquals(0, (int) t.nth(n));
+    }
+    for (int n = 0; n < t.size(); n++) {
+      t = t.nth(n, 1);
+    }
+    for (int n = 0; n < t.size(); n++) {
+      assertEquals(1, (int) t.nth(n));
+    }
+  }
 }
