@@ -25,7 +25,7 @@ public class FingerTreeSeqTest {
       assertEquals(n, (int) t.head());
       assertEquals(n + 1, t.size());
       for (int m = 0; m < t.size(); m++) {
-        assertEquals(m, (int) t.nth(m));
+        assertEquals(n - m, (int) t.nth(m));
       }
     }
     //t.dump(new IndentingPrintWriter(System.out));
@@ -39,7 +39,7 @@ public class FingerTreeSeqTest {
       assertEquals(0, (int) t.head());
       assertEquals(n + 1, t.size());
       for (int m = 0; m < t.size(); m++) {
-        assertEquals(n - m, (int) t.nth(m));
+        assertEquals(m, (int) t.nth(m));
       }
     }
     //t.dump(new IndentingPrintWriter(System.out));
