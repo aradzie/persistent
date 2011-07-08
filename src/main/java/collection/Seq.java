@@ -3,7 +3,7 @@ package collection;
 /**
  * A generic persistent list interface. Every mutation operation
  * creates new modified list instance, the previous version is left
- * untouched.
+ * unmodified.
  *
  * @param <T> Element type.
  */
