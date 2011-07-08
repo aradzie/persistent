@@ -4,7 +4,7 @@ import debug.IndentingPrintWriter;
 import debug.Printable;
 
 public class FingerTreeSeq<T> implements Seq<T> {
-  private Item<T> root;
+  private final Item<T> root;
 
   public FingerTreeSeq() {
     root = new Item.Empty<T>();
