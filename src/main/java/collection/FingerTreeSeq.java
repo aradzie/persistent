@@ -20,7 +20,7 @@ public class FingerTreeSeq<T> implements Seq<T> {
   }
 
   @Override
-  public Seq<T> tail() throws RangeException {
+  public FingerTreeSeq<T> tail() throws RangeException {
     throw new UnsupportedOperationException();
   }
 
@@ -35,7 +35,16 @@ public class FingerTreeSeq<T> implements Seq<T> {
   }
 
   @Override
-  public Seq<T> concat(Seq<T> that) {
+  public FingerTreeSeq<T> concat(Seq<T> that) {
+    if (that instanceof FingerTreeSeq) {
+      return concat((FingerTreeSeq<T>) that);
+    }
+    else {
+      throw new UnsupportedOperationException();
+    }
+  }
+
+  public FingerTreeSeq<T> concat(FingerTreeSeq<T> that) {
     throw new UnsupportedOperationException();
   }
 
