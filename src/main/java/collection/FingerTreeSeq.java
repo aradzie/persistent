@@ -4,7 +4,7 @@ import debug.IndentingPrintWriter;
 import debug.Printable;
 
 public class FingerTreeSeq<T> implements Seq<T> {
-  private Item<T> root;
+  private final Item<T> root;
 
   public FingerTreeSeq() {
     root = new Item.Empty<T>();
@@ -15,12 +15,12 @@ public class FingerTreeSeq<T> implements Seq<T> {
   }
 
   @Override
-  public T head() throws EmptyException {
+  public T head() throws RangeException {
     return root.head();
   }
 
   @Override
-  public Seq<T> tail() throws EmptyException {
+  public FingerTreeSeq<T> tail() throws RangeException {
     throw new UnsupportedOperationException();
   }
 
@@ -35,7 +35,16 @@ public class FingerTreeSeq<T> implements Seq<T> {
   }
 
   @Override
-  public Seq<T> concat(Seq<T> that) {
+  public FingerTreeSeq<T> concat(Seq<T> that) {
+    if (that instanceof FingerTreeSeq) {
+      return concat((FingerTreeSeq<T>) that);
+    }
+    else {
+      throw new UnsupportedOperationException();
+    }
+  }
+
+  public FingerTreeSeq<T> concat(FingerTreeSeq<T> that) {
     throw new UnsupportedOperationException();
   }
 
@@ -95,9 +104,9 @@ public class FingerTreeSeq<T> implements Seq<T> {
   }
 
   private abstract static class Digit<T> implements Measured<T>, Printable {
-    abstract Item.Deep<T> cons(Digit<T> digit, Item<T> item, Measured<T> v);
+    abstract Item.Deep<T> cons(Measured<T> v, Item<T> item, Digit<T> digit);
 
-    abstract Item.Deep<T> snoc(Measured<T> v, Item<T> item, Digit<T> digit);
+    abstract Item.Deep<T> snoc(Digit<T> digit, Item<T> item, Measured<T> v);
 
     static class One<T> extends Digit<T> {
       final Measured<T> a;
@@ -109,13 +118,13 @@ public class FingerTreeSeq<T> implements Seq<T> {
       }
 
       @Override
-      Item.Deep<T> cons(Digit<T> digit, Item<T> item, Measured<T> v) {
-        return new Item.Deep<T>(digit, item, new Two<T>(a, v));
+      Item.Deep<T> cons(Measured<T> v, Item<T> item, Digit<T> digit) {
+        return new Item.Deep<T>(new Two<T>(v, a), item, digit);
       }
 
       @Override
-      Item.Deep<T> snoc(Measured<T> v, Item<T> item, Digit<T> digit) {
-        return new Item.Deep<T>(new Two<T>(v, a), item, digit);
+      Item.Deep<T> snoc(Digit<T> digit, Item<T> item, Measured<T> v) {
+        return new Item.Deep<T>(digit, item, new Two<T>(a, v));
       }
 
       @Override
@@ -154,13 +163,13 @@ public class FingerTreeSeq<T> implements Seq<T> {
       }
 
       @Override
-      Item.Deep<T> cons(Digit<T> digit, Item<T> item, Measured<T> v) {
-        return new Item.Deep<T>(digit, item, new Three<T>(a, b, v));
+      Item.Deep<T> cons(Measured<T> v, Item<T> item, Digit<T> digit) {
+        return new Item.Deep<T>(new Three<T>(v, a, b), item, digit);
       }
 
       @Override
-      Item.Deep<T> snoc(Measured<T> v, Item<T> item, Digit<T> digit) {
-        return new Item.Deep<T>(new Three<T>(v, a, b), item, digit);
+      Item.Deep<T> snoc(Digit<T> digit, Item<T> item, Measured<T> v) {
+        return new Item.Deep<T>(digit, item, new Three<T>(a, b, v));
       }
 
       @Override
@@ -182,7 +191,7 @@ public class FingerTreeSeq<T> implements Seq<T> {
 
       @Override
       public T head() {
-        return b.head();
+        return a.head();
       }
 
       @Override
@@ -205,13 +214,13 @@ public class FingerTreeSeq<T> implements Seq<T> {
       }
 
       @Override
-      Item.Deep<T> cons(Digit<T> digit, Item<T> item, Measured<T> v) {
-        return new Item.Deep<T>(digit, item, new Four<T>(a, b, c, v));
+      Item.Deep<T> cons(Measured<T> v, Item<T> item, Digit<T> digit) {
+        return new Item.Deep<T>(new Four<T>(v, a, b, c), item, digit);
       }
 
       @Override
-      Item.Deep<T> snoc(Measured<T> v, Item<T> item, Digit<T> digit) {
-        return new Item.Deep<T>(new Four<T>(v, a, b, c), item, digit);
+      Item.Deep<T> snoc(Digit<T> digit, Item<T> item, Measured<T> v) {
+        return new Item.Deep<T>(digit, item, new Four<T>(a, b, c, v));
       }
 
       @Override
@@ -237,7 +246,7 @@ public class FingerTreeSeq<T> implements Seq<T> {
 
       @Override
       public T head() {
-        return c.head();
+        return a.head();
       }
 
       @Override
@@ -262,19 +271,19 @@ public class FingerTreeSeq<T> implements Seq<T> {
       }
 
       @Override
-      Item.Deep<T> cons(Digit<T> digit, Item<T> item, Measured<T> v) {
+      Item.Deep<T> cons(Measured<T> v, Item<T> item, Digit<T> digit) {
         return new Item.Deep<T>(
-            digit,
-            item.cons(new Node.Node3<T>(a, b, c)),
-            new Digit.Two<T>(d, v));
+            new Digit.Two<T>(v, a),
+            item.cons(new Node.Node3<T>(b, c, d)),
+            digit);
       }
 
       @Override
-      Item.Deep<T> snoc(Measured<T> v, Item<T> item, Digit<T> digit) {
+      Item.Deep<T> snoc(Digit<T> digit, Item<T> item, Measured<T> v) {
         return new Item.Deep<T>(
-            new Digit.Two<T>(v, a),
-            item.snoc(new Node.Node3<T>(b, c, d)),
-            digit);
+            digit,
+            item.snoc(new Node.Node3<T>(a, b, c)),
+            new Digit.Two<T>(d, v));
       }
 
       @Override
@@ -304,7 +313,7 @@ public class FingerTreeSeq<T> implements Seq<T> {
 
       @Override
       public T head() {
-        return d.head();
+        return a.head();
       }
 
       @Override
@@ -344,7 +353,7 @@ public class FingerTreeSeq<T> implements Seq<T> {
 
       @Override
       public T head() {
-        return b.head();
+        return a.head();
       }
 
       @Override
@@ -387,7 +396,7 @@ public class FingerTreeSeq<T> implements Seq<T> {
 
       @Override
       public T head() {
-        return c.head();
+        return a.head();
       }
 
       @Override
@@ -425,7 +434,7 @@ public class FingerTreeSeq<T> implements Seq<T> {
 
       @Override
       public T head() {
-        throw new EmptyException();
+        throw new RangeException();
       }
 
       @Override
@@ -444,17 +453,17 @@ public class FingerTreeSeq<T> implements Seq<T> {
       @Override
       Deep<T> cons(Measured<T> v) {
         return new Item.Deep<T>(
-            new Digit.One<T>(this.v),
+            new Digit.One<T>(v),
             new Item.Empty<T>(),
-            new Digit.One<T>(v));
+            new Digit.One<T>(this.v));
       }
 
       @Override
       Deep<T> snoc(Measured<T> v) {
         return new Item.Deep<T>(
-            new Digit.One<T>(v),
+            new Digit.One<T>(this.v),
             new Item.Empty<T>(),
-            new Digit.One<T>(this.v));
+            new Digit.One<T>(v));
       }
 
       @Override
@@ -493,12 +502,12 @@ public class FingerTreeSeq<T> implements Seq<T> {
 
       @Override
       Item<T> cons(Measured<T> v) {
-        return dr.cons(dl, item, v);
+        return dl.cons(v, item, dr);
       }
 
       @Override
       Deep<T> snoc(Measured<T> v) {
-        return dl.snoc(v, item, dr);
+        return dr.snoc(dl, item, v);
       }
 
       @Override
@@ -524,7 +533,7 @@ public class FingerTreeSeq<T> implements Seq<T> {
 
       @Override
       public T head() {
-        return dr.head();
+        return dl.head();
       }
 
       @Override

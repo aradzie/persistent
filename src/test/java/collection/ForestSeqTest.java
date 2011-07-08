@@ -5,21 +5,20 @@ import org.junit.Test;
 
 import static org.junit.Assert.*;
 
-public class FingerTreeSeqTest {
+public class ForestSeqTest {
   @Test(expected = Seq.RangeException.class)
   public void headOfEmptySeq() {
-    new FingerTreeSeq<String>().head();
+    new ForestSeq<String>().head();
   }
 
-  @Ignore
   @Test(expected = Seq.RangeException.class)
   public void tailOfEmptySeq() {
-    new FingerTreeSeq<String>().tail();
+    new ForestSeq<String>().tail();
   }
 
   @Test
   public void cons() {
-    FingerTreeSeq<Integer> t = new FingerTreeSeq<Integer>();
+    ForestSeq<Integer> t = new ForestSeq<Integer>();
     for (int n = 0; n < 1000; n++) {
       t = t.cons(n);
       assertEquals(n, (int) t.head());
@@ -28,12 +27,12 @@ public class FingerTreeSeqTest {
         assertEquals(n - m, (int) t.nth(m));
       }
     }
-    //t.dump(new IndentingPrintWriter(System.out));
   }
 
   @Test
+  @Ignore
   public void snoc() {
-    FingerTreeSeq<Integer> t = new FingerTreeSeq<Integer>();
+    ForestSeq<Integer> t = new ForestSeq<Integer>();
     for (int n = 0; n < 1000; n++) {
       t = t.snoc(n);
       assertEquals(0, (int) t.head());
@@ -42,6 +41,25 @@ public class FingerTreeSeqTest {
         assertEquals(m, (int) t.nth(m));
       }
     }
-    //t.dump(new IndentingPrintWriter(System.out));
+  }
+
+  @Test
+  public void update() {
+    ForestSeq<Integer> t = new ForestSeq<Integer>();
+    for (int n = 0; n < 1000; n++) {
+      t = t.cons(n);
+    }
+    for (int n = 0; n < t.size(); n++) {
+      t = t.nth(n, 0);
+    }
+    for (int n = 0; n < t.size(); n++) {
+      assertEquals(0, (int) t.nth(n));
+    }
+    for (int n = 0; n < t.size(); n++) {
+      t = t.nth(n, 1);
+    }
+    for (int n = 0; n < t.size(); n++) {
+      assertEquals(1, (int) t.nth(n));
+    }
   }
 }
