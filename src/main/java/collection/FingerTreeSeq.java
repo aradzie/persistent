@@ -15,12 +15,12 @@ public class FingerTreeSeq<T> implements Seq<T> {
   }
 
   @Override
-  public T head() throws EmptyException {
+  public T head() throws RangeException {
     return root.head();
   }
 
   @Override
-  public Seq<T> tail() throws EmptyException {
+  public Seq<T> tail() throws RangeException {
     throw new UnsupportedOperationException();
   }
 
@@ -425,7 +425,7 @@ public class FingerTreeSeq<T> implements Seq<T> {
 
       @Override
       public T head() {
-        throw new EmptyException();
+        throw new RangeException();
       }
 
       @Override

@@ -6,14 +6,14 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 public class FingerTreeSeqTest {
-  @Test(expected = Seq.EmptyException.class)
-  public void headOfEmptySeq() throws Exception {
+  @Test(expected = Seq.RangeException.class)
+  public void headOfEmptySeq() {
     new FingerTreeSeq<String>().head();
   }
 
   @Ignore
-  @Test(expected = Seq.EmptyException.class)
-  public void tailOfEmptySeq() throws Exception {
+  @Test(expected = Seq.RangeException.class)
+  public void tailOfEmptySeq() {
     new FingerTreeSeq<String>().tail();
   }
 

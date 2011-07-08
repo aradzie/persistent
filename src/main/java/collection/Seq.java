@@ -1,9 +1,9 @@
 package collection;
 
 public interface Seq<T> {
-  T head() throws EmptyException;
+  T head() throws RangeException;
 
-  Seq<T> tail() throws EmptyException;
+  Seq<T> tail() throws RangeException;
 
   Seq<T> cons(T v);
 
@@ -14,10 +14,6 @@ public interface Seq<T> {
   int size();
 
   T nth(int index) throws RangeException;
-
-  class EmptyException extends IllegalStateException {
-    public EmptyException() {}
-  }
 
   class RangeException extends IllegalStateException {
     public RangeException() {}
