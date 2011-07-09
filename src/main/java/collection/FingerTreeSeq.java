@@ -15,12 +15,14 @@ public class FingerTreeSeq<T> implements Seq<T> {
   }
 
   @Override
-  public T head() throws RangeException {
+  public T head()
+      throws RangeException {
     return root.head();
   }
 
   @Override
-  public FingerTreeSeq<T> tail() throws RangeException {
+  public FingerTreeSeq<T> tail()
+      throws RangeException {
     throw new UnsupportedOperationException();
   }
 
@@ -54,8 +56,15 @@ public class FingerTreeSeq<T> implements Seq<T> {
   }
 
   @Override
-  public T nth(int index) throws RangeException {
+  public T nth(int index)
+      throws RangeException {
     return root.nth(index);
+  }
+
+  @Override
+  public FingerTreeSeq<T> nth(int index, T v)
+      throws RangeException {
+    throw new UnsupportedOperationException();
   }
 
   void dump(IndentingPrintWriter w) {

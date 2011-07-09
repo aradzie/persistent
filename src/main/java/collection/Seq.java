@@ -15,7 +15,8 @@ public interface Seq<T> {
    * @return The most recently consed element.
    * @throws RangeException If list is empty.
    */
-  T head() throws RangeException;
+  T head()
+      throws RangeException;
 
   /**
    * Get list without the first element. The first element
@@ -24,7 +25,8 @@ public interface Seq<T> {
    * @return The list without the most recently consed element.
    * @throws RangeException If list is empty.
    */
-  Seq<T> tail() throws RangeException;
+  Seq<T> tail()
+      throws RangeException;
 
   /**
    * Prepend element to the head of this list. The prepended
@@ -68,8 +70,22 @@ public interface Seq<T> {
    * @return The element with the specified index.
    * @throws RangeException If element index is out of range.
    */
-  T nth(int index) throws RangeException;
+  T nth(int index)
+      throws RangeException;
 
+  /**
+   * Update element at the specified position.
+   *
+   * @param index Index of the element to update,
+   *              where 0 is the index of the most recently consed element
+   * @param v     New element value.
+   * @return Updated list.
+   * @throws RangeException If element index is out of range.
+   */
+  Seq<T> nth(int index, T v)
+      throws RangeException;
+
+  /** Indicates that a list element index is out of range. */
   class RangeException extends IllegalStateException {
     public RangeException() {}
   }

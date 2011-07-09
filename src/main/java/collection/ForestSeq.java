@@ -23,12 +23,14 @@ public class ForestSeq<T> implements Seq<T> {
   }
 
   @Override
-  public T head() throws RangeException {
+  public T head()
+      throws RangeException {
     return head.head();
   }
 
   @Override
-  public ForestSeq<T> tail() throws RangeException {
+  public ForestSeq<T> tail()
+      throws RangeException {
     return new ForestSeq<T>(head.tail());
   }
 
@@ -62,11 +64,14 @@ public class ForestSeq<T> implements Seq<T> {
   }
 
   @Override
-  public T nth(int index) throws RangeException {
+  public T nth(int index)
+      throws RangeException {
     return head.nth(index);
   }
 
-  public ForestSeq<T> nth(int index, T v) throws RangeException {
+  @Override
+  public ForestSeq<T> nth(int index, T v)
+      throws RangeException {
     return new ForestSeq<T>(head.nth(index, v));
   }
 
