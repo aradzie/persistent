@@ -11,7 +11,7 @@ package collection;
  *
  * @param <T> Element type.
  */
-public class ForestSeq<T> implements Seq<T> {
+public final class ForestSeq<T> implements Seq<T> {
   private final Tree<T> head;
 
   private ForestSeq(Tree<T> head) {

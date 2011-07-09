@@ -3,7 +3,7 @@ package collection;
 import debug.IndentingPrintWriter;
 import debug.Printable;
 
-public class FingerTreeSeq<T> implements Seq<T> {
+public final class FingerTreeSeq<T> implements Seq<T> {
   private final Item<T> root;
 
   public FingerTreeSeq() {
