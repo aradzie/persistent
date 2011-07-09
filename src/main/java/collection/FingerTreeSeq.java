@@ -64,7 +64,7 @@ public class FingerTreeSeq<T> implements Seq<T> {
   @Override
   public FingerTreeSeq<T> nth(int index, T v)
       throws RangeException {
-    throw new UnsupportedOperationException();
+    return new FingerTreeSeq<T>(root.nth(index, v));
   }
 
   void dump(IndentingPrintWriter w) {
@@ -73,15 +73,17 @@ public class FingerTreeSeq<T> implements Seq<T> {
     w.flush();
   }
 
-  private interface Measured<T> {
-    T head();
+  private abstract static class Fragment<T> {
+    abstract T head();
 
-    int size();
+    abstract int size();
 
-    T nth(int index);
+    abstract T nth(int index);
+
+    abstract Fragment<T> nth(int index, T v);
   }
 
-  private static class Elem<T> implements Measured<T>, Printable {
+  private static final class Elem<T> extends Fragment<T> implements Printable {
     final T e;
 
     Elem(T e) {
@@ -89,19 +91,27 @@ public class FingerTreeSeq<T> implements Seq<T> {
     }
 
     @Override
-    public T head() {
+    T head() {
       return e;
     }
 
     @Override
-    public int size() {
+    int size() {
       return 1;
     }
 
     @Override
-    public T nth(int index) {
+    T nth(int index) {
       if (index == 0) {
         return e;
+      }
+      throw new RangeException();
+    }
+
+    @Override
+    Elem<T> nth(int index, T v) {
+      if (index == 0) {
+        return new Elem<T>(v);
       }
       throw new RangeException();
     }
@@ -112,44 +122,55 @@ public class FingerTreeSeq<T> implements Seq<T> {
     }
   }
 
-  private abstract static class Digit<T> implements Measured<T>, Printable {
-    abstract Item.Deep<T> cons(Measured<T> v, Item<T> item, Digit<T> digit);
+  private abstract static class Digit<T> extends Fragment<T> implements Printable {
+    abstract Item.Deep<T> cons(Fragment<T> v, Item<T> item, Digit<T> digit);
 
-    abstract Item.Deep<T> snoc(Digit<T> digit, Item<T> item, Measured<T> v);
+    abstract Item.Deep<T> snoc(Digit<T> digit, Item<T> item, Fragment<T> v);
+
+    @Override
+    abstract Digit<T> nth(int index, T v);
 
     static final class One<T> extends Digit<T> {
-      final Measured<T> a;
+      final Fragment<T> a;
       final int v;
 
-      One(Measured<T> a) {
+      One(Fragment<T> a) {
         this.a = a;
         v = this.a.size();
       }
 
       @Override
-      Item.Deep<T> cons(Measured<T> v, Item<T> item, Digit<T> digit) {
+      Item.Deep<T> cons(Fragment<T> v, Item<T> item, Digit<T> digit) {
         return new Item.Deep<T>(new Two<T>(v, a), item, digit);
       }
 
       @Override
-      Item.Deep<T> snoc(Digit<T> digit, Item<T> item, Measured<T> v) {
+      Item.Deep<T> snoc(Digit<T> digit, Item<T> item, Fragment<T> v) {
         return new Item.Deep<T>(digit, item, new Two<T>(a, v));
       }
 
       @Override
-      public T head() {
+      T head() {
         return a.head();
       }
 
       @Override
-      public int size() {
+      int size() {
         return v;
       }
 
       @Override
-      public T nth(int index) {
+      T nth(int index) {
         if (index < a.size()) {
           return a.nth(index);
+        }
+        throw new RangeException();
+      }
+
+      @Override
+      One<T> nth(int index, T v) {
+        if (index < a.size()) {
+          return new One<T>(a.nth(index, v));
         }
         throw new RangeException();
       }
@@ -161,38 +182,38 @@ public class FingerTreeSeq<T> implements Seq<T> {
     }
 
     static final class Two<T> extends Digit<T> {
-      final Measured<T> a;
-      final Measured<T> b;
+      final Fragment<T> a;
+      final Fragment<T> b;
       final int v;
 
-      Two(Measured<T> a, Measured<T> b) {
+      Two(Fragment<T> a, Fragment<T> b) {
         this.a = a;
         this.b = b;
         v = this.a.size() + this.b.size();
       }
 
       @Override
-      Item.Deep<T> cons(Measured<T> v, Item<T> item, Digit<T> digit) {
+      Item.Deep<T> cons(Fragment<T> v, Item<T> item, Digit<T> digit) {
         return new Item.Deep<T>(new Three<T>(v, a, b), item, digit);
       }
 
       @Override
-      Item.Deep<T> snoc(Digit<T> digit, Item<T> item, Measured<T> v) {
+      Item.Deep<T> snoc(Digit<T> digit, Item<T> item, Fragment<T> v) {
         return new Item.Deep<T>(digit, item, new Three<T>(a, b, v));
       }
 
       @Override
-      public T head() {
+      T head() {
         return a.head();
       }
 
       @Override
-      public int size() {
+      int size() {
         return v;
       }
 
       @Override
-      public T nth(int index) {
+      T nth(int index) {
         if (index < a.size()) {
           return a.nth(index);
         }
@@ -204,18 +225,30 @@ public class FingerTreeSeq<T> implements Seq<T> {
       }
 
       @Override
+      Two<T> nth(int index, T v) {
+        if (index < a.size()) {
+          return new Two<T>(a.nth(index, v), b);
+        }
+        index -= a.size();
+        if (index < b.size()) {
+          return new Two<T>(a, b.nth(index, v));
+        }
+        throw new RangeException();
+      }
+
+      @Override
       public void print(IndentingPrintWriter w) {
         printDigit(w, "Two", this, a, b);
       }
     }
 
     static final class Three<T> extends Digit<T> {
-      final Measured<T> a;
-      final Measured<T> b;
-      final Measured<T> c;
+      final Fragment<T> a;
+      final Fragment<T> b;
+      final Fragment<T> c;
       final int v;
 
-      Three(Measured<T> a, Measured<T> b, Measured<T> c) {
+      Three(Fragment<T> a, Fragment<T> b, Fragment<T> c) {
         this.a = a;
         this.b = b;
         this.c = c;
@@ -223,27 +256,27 @@ public class FingerTreeSeq<T> implements Seq<T> {
       }
 
       @Override
-      Item.Deep<T> cons(Measured<T> v, Item<T> item, Digit<T> digit) {
+      Item.Deep<T> cons(Fragment<T> v, Item<T> item, Digit<T> digit) {
         return new Item.Deep<T>(new Four<T>(v, a, b, c), item, digit);
       }
 
       @Override
-      Item.Deep<T> snoc(Digit<T> digit, Item<T> item, Measured<T> v) {
+      Item.Deep<T> snoc(Digit<T> digit, Item<T> item, Fragment<T> v) {
         return new Item.Deep<T>(digit, item, new Four<T>(a, b, c, v));
       }
 
       @Override
-      public T head() {
+      T head() {
         return a.head();
       }
 
       @Override
-      public int size() {
+      int size() {
         return v;
       }
 
       @Override
-      public T nth(int index) {
+      T nth(int index) {
         if (index < a.size()) {
           return a.nth(index);
         }
@@ -259,19 +292,35 @@ public class FingerTreeSeq<T> implements Seq<T> {
       }
 
       @Override
+      Three<T> nth(int index, T v) {
+        if (index < a.size()) {
+          return new Three<T>(a.nth(index, v), b, c);
+        }
+        index -= a.size();
+        if (index < b.size()) {
+          return new Three<T>(a, b.nth(index, v), c);
+        }
+        index -= b.size();
+        if (index < c.size()) {
+          return new Three<T>(a, b, c.nth(index, v));
+        }
+        throw new RangeException();
+      }
+
+      @Override
       public void print(IndentingPrintWriter w) {
         printDigit(w, "Three", this, a, b, c);
       }
     }
 
     static final class Four<T> extends Digit<T> {
-      final Measured<T> a;
-      final Measured<T> b;
-      final Measured<T> c;
-      final Measured<T> d;
+      final Fragment<T> a;
+      final Fragment<T> b;
+      final Fragment<T> c;
+      final Fragment<T> d;
       final int v;
 
-      Four(Measured<T> a, Measured<T> b, Measured<T> c, Measured<T> d) {
+      Four(Fragment<T> a, Fragment<T> b, Fragment<T> c, Fragment<T> d) {
         this.a = a;
         this.b = b;
         this.c = c;
@@ -280,7 +329,7 @@ public class FingerTreeSeq<T> implements Seq<T> {
       }
 
       @Override
-      Item.Deep<T> cons(Measured<T> v, Item<T> item, Digit<T> digit) {
+      Item.Deep<T> cons(Fragment<T> v, Item<T> item, Digit<T> digit) {
         return new Item.Deep<T>(
             new Digit.Two<T>(v, a),
             item.cons(new Node.Node3<T>(b, c, d)),
@@ -288,7 +337,7 @@ public class FingerTreeSeq<T> implements Seq<T> {
       }
 
       @Override
-      Item.Deep<T> snoc(Digit<T> digit, Item<T> item, Measured<T> v) {
+      Item.Deep<T> snoc(Digit<T> digit, Item<T> item, Fragment<T> v) {
         return new Item.Deep<T>(
             digit,
             item.snoc(new Node.Node3<T>(a, b, c)),
@@ -296,17 +345,17 @@ public class FingerTreeSeq<T> implements Seq<T> {
       }
 
       @Override
-      public T head() {
+      T head() {
         return a.head();
       }
 
       @Override
-      public int size() {
+      int size() {
         return v;
       }
 
       @Override
-      public T nth(int index) {
+      T nth(int index) {
         if (index < a.size()) {
           return a.nth(index);
         }
@@ -326,35 +375,58 @@ public class FingerTreeSeq<T> implements Seq<T> {
       }
 
       @Override
+      Four<T> nth(int index, T v) {
+        if (index < a.size()) {
+          return new Four<T>(a.nth(index, v), b, c, d);
+        }
+        index -= a.size();
+        if (index < b.size()) {
+          return new Four<T>(a, b.nth(index, v), c, d);
+        }
+        index -= b.size();
+        if (index < c.size()) {
+          return new Four<T>(a, b, c.nth(index, v), d);
+        }
+        index -= c.size();
+        if (index < d.size()) {
+          return new Four<T>(a, b, c, d.nth(index, v));
+        }
+        throw new RangeException();
+      }
+
+      @Override
       public void print(IndentingPrintWriter w) {
         printDigit(w, "Four", this, a, b, c, d);
       }
     }
   }
 
-  private abstract static class Node<T> implements Measured<T>, Printable {
+  private abstract static class Node<T> extends Fragment<T> implements Printable {
+    @Override
+    abstract Node<T> nth(int index, T v);
+
     static final class Node2<T> extends Node<T> {
-      final Measured<T> a, b;
+      final Fragment<T> a, b;
       final int v;
 
-      Node2(Measured<T> a, Measured<T> b) {
+      Node2(Fragment<T> a, Fragment<T> b) {
         this.a = a;
         this.b = b;
         v = a.size() + b.size();
       }
 
       @Override
-      public T head() {
+      T head() {
         return a.head();
       }
 
       @Override
-      public int size() {
+      int size() {
         return v;
       }
 
       @Override
-      public T nth(int index) {
+      T nth(int index) {
         if (index < a.size()) {
           return a.nth(index);
         }
@@ -366,16 +438,28 @@ public class FingerTreeSeq<T> implements Seq<T> {
       }
 
       @Override
+      Node2<T> nth(int index, T v) {
+        if (index < a.size()) {
+          return new Node2<T>(a.nth(index, v), b);
+        }
+        index -= a.size();
+        if (index < b.size()) {
+          return new Node2<T>(a, b.nth(index, v));
+        }
+        throw new RangeException();
+      }
+
+      @Override
       public void print(IndentingPrintWriter w) {
         printNode(w, "Two", this, a, b);
       }
     }
 
     static final class Node3<T> extends Node<T> {
-      final Measured<T> a, b, c;
+      final Fragment<T> a, b, c;
       final int v;
 
-      Node3(Measured<T> a, Measured<T> b, Measured<T> c) {
+      Node3(Fragment<T> a, Fragment<T> b, Fragment<T> c) {
         this.a = a;
         this.b = b;
         this.c = c;
@@ -383,17 +467,17 @@ public class FingerTreeSeq<T> implements Seq<T> {
       }
 
       @Override
-      public T head() {
+      T head() {
         return a.head();
       }
 
       @Override
-      public int size() {
+      int size() {
         return v;
       }
 
       @Override
-      public T nth(int index) {
+      T nth(int index) {
         if (index < a.size()) {
           return a.nth(index);
         }
@@ -409,40 +493,64 @@ public class FingerTreeSeq<T> implements Seq<T> {
       }
 
       @Override
+      Node3<T> nth(int index, T v) {
+        if (index < a.size()) {
+          return new Node3<T>(a.nth(index, v), b, c);
+        }
+        index -= a.size();
+        if (index < b.size()) {
+          return new Node3<T>(a, b.nth(index, v), c);
+        }
+        index -= b.size();
+        if (index < c.size()) {
+          return new Node3<T>(a, b, c.nth(index, v));
+        }
+        throw new RangeException();
+      }
+
+      @Override
       public void print(IndentingPrintWriter w) {
         printNode(w, "Three", this, a, b, c);
       }
     }
   }
 
-  private abstract static class Item<T> implements Measured<T>, Printable {
-    abstract Item<T> cons(Measured<T> v);
+  private abstract static class Item<T> extends Fragment<T> implements Printable {
+    abstract Item<T> cons(Fragment<T> v);
 
-    abstract Item<T> snoc(Measured<T> v);
+    abstract Item<T> snoc(Fragment<T> v);
+
+    @Override
+    abstract Item<T> nth(int index, T v);
 
     static final class Empty<T> extends Item<T> {
       @Override
-      Single<T> cons(Measured<T> v) {
+      Single<T> cons(Fragment<T> v) {
         return new Item.Single<T>(v);
       }
 
       @Override
-      Single<T> snoc(Measured<T> v) {
+      Single<T> snoc(Fragment<T> v) {
         return new Item.Single<T>(v);
       }
 
       @Override
-      public T head() {
+      T head() {
         throw new RangeException();
       }
 
       @Override
-      public int size() {
+      int size() {
         return 0;
       }
 
       @Override
-      public T nth(int index) {
+      T nth(int index) {
+        throw new RangeException();
+      }
+
+      @Override
+      Empty<T> nth(int index, T v) {
         throw new RangeException();
       }
 
@@ -453,41 +561,46 @@ public class FingerTreeSeq<T> implements Seq<T> {
     }
 
     static final class Single<T> extends Item<T> {
-      final Measured<T> v;
+      final Fragment<T> f;
 
-      Single(Measured<T> v) {
-        this.v = v;
+      Single(Fragment<T> f) {
+        this.f = f;
       }
 
       @Override
-      Deep<T> cons(Measured<T> v) {
+      Deep<T> cons(Fragment<T> v) {
         return new Item.Deep<T>(
             new Digit.One<T>(v),
             new Item.Empty<T>(),
-            new Digit.One<T>(this.v));
+            new Digit.One<T>(f));
       }
 
       @Override
-      Deep<T> snoc(Measured<T> v) {
+      Deep<T> snoc(Fragment<T> v) {
         return new Item.Deep<T>(
-            new Digit.One<T>(this.v),
+            new Digit.One<T>(f),
             new Item.Empty<T>(),
             new Digit.One<T>(v));
       }
 
       @Override
-      public T head() {
-        return v.head();
+      T head() {
+        return f.head();
       }
 
       @Override
-      public int size() {
-        return v.size();
+      int size() {
+        return f.size();
       }
 
       @Override
-      public T nth(int index) {
-        return v.nth(index);
+      T nth(int index) {
+        return f.nth(index);
+      }
+
+      @Override
+      Single<T> nth(int index, T v) {
+        return new Single<T>(f.nth(index, v));
       }
 
       @Override
@@ -510,27 +623,27 @@ public class FingerTreeSeq<T> implements Seq<T> {
       }
 
       @Override
-      Item<T> cons(Measured<T> v) {
+      Item<T> cons(Fragment<T> v) {
         return dl.cons(v, item, dr);
       }
 
       @Override
-      Deep<T> snoc(Measured<T> v) {
+      Deep<T> snoc(Fragment<T> v) {
         return dr.snoc(dl, item, v);
       }
 
       @Override
-      public T head() {
+      T head() {
         return dl.head();
       }
 
       @Override
-      public int size() {
+      int size() {
         return v;
       }
 
       @Override
-      public T nth(int index) {
+      T nth(int index) {
         if (index < dl.size()) {
           return dl.nth(index);
         }
@@ -541,6 +654,22 @@ public class FingerTreeSeq<T> implements Seq<T> {
         index -= item.size();
         if (index < dr.size()) {
           return dr.nth(index);
+        }
+        throw new RangeException();
+      }
+
+      @Override
+      Deep<T> nth(int index, T v) {
+        if (index < dl.size()) {
+          return new Deep<T>(dl.nth(index, v), item, dr);
+        }
+        index -= dl.size();
+        if (index < item.size()) {
+          return new Deep<T>(dl, item.nth(index, v), dr);
+        }
+        index -= item.size();
+        if (index < dr.size()) {
+          return new Deep<T>(dl, item, dr.nth(index, v));
         }
         throw new RangeException();
       }
@@ -599,17 +728,17 @@ public class FingerTreeSeq<T> implements Seq<T> {
 
   private static <T> void printSingle(IndentingPrintWriter w,
                                       Item.Single<T> single) {
-    if (single.v instanceof Printable) {
+    if (single.f instanceof Printable) {
       w.write("Single");
       w.write("<");
       w.write(String.valueOf(single.size()));
       w.write(">");
       w.write("(");
-      ((Printable) single.v).print(w);
+      ((Printable) single.f).print(w);
       w.write(")");
     }
     else {
-      w.print(single.v);
+      w.print(single.f);
     }
   }
 
