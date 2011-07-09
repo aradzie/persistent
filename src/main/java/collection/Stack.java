@@ -2,7 +2,7 @@ package collection;
 
 import java.util.NoSuchElementException;
 
-public class Stack<T> {
+public final class Stack<T> {
   private final T v;
   private final Stack<T> next;
 
