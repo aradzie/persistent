@@ -56,15 +56,15 @@ public class FingerTreeSeq<T> implements Seq<T> {
   }
 
   @Override
-  public T nth(int index)
+  public T get(int index)
       throws RangeException {
-    return root.nth(index);
+    return root.get(index);
   }
 
   @Override
-  public FingerTreeSeq<T> nth(int index, T v)
+  public FingerTreeSeq<T> set(int index, T v)
       throws RangeException {
-    return new FingerTreeSeq<T>(root.nth(index, v));
+    return new FingerTreeSeq<T>(root.set(index, v));
   }
 
   void dump(IndentingPrintWriter w) {
@@ -78,9 +78,9 @@ public class FingerTreeSeq<T> implements Seq<T> {
 
     abstract int size();
 
-    abstract T nth(int index);
+    abstract T get(int index);
 
-    abstract Fragment<T> nth(int index, T v);
+    abstract Fragment<T> set(int index, T v);
   }
 
   private static final class Elem<T> extends Fragment<T> implements Printable {
@@ -101,7 +101,7 @@ public class FingerTreeSeq<T> implements Seq<T> {
     }
 
     @Override
-    T nth(int index) {
+    T get(int index) {
       if (index == 0) {
         return v;
       }
@@ -109,7 +109,7 @@ public class FingerTreeSeq<T> implements Seq<T> {
     }
 
     @Override
-    Elem<T> nth(int index, T v) {
+    Elem<T> set(int index, T v) {
       if (index == 0) {
         return new Elem<T>(v);
       }
@@ -128,7 +128,7 @@ public class FingerTreeSeq<T> implements Seq<T> {
     abstract Item.Deep<T> snoc(Digit<T> digit, Item<T> item, Fragment<T> v);
 
     @Override
-    abstract Digit<T> nth(int index, T v);
+    abstract Digit<T> set(int index, T v);
 
     static final class One<T> extends Digit<T> {
       final Fragment<T> a;
@@ -160,17 +160,17 @@ public class FingerTreeSeq<T> implements Seq<T> {
       }
 
       @Override
-      T nth(int index) {
+      T get(int index) {
         if (index < a.size()) {
-          return a.nth(index);
+          return a.get(index);
         }
         throw new RangeException();
       }
 
       @Override
-      One<T> nth(int index, T v) {
+      One<T> set(int index, T v) {
         if (index < a.size()) {
-          return new One<T>(a.nth(index, v));
+          return new One<T>(a.set(index, v));
         }
         throw new RangeException();
       }
@@ -213,25 +213,25 @@ public class FingerTreeSeq<T> implements Seq<T> {
       }
 
       @Override
-      T nth(int index) {
+      T get(int index) {
         if (index < a.size()) {
-          return a.nth(index);
+          return a.get(index);
         }
         index -= a.size();
         if (index < b.size()) {
-          return b.nth(index);
+          return b.get(index);
         }
         throw new RangeException();
       }
 
       @Override
-      Two<T> nth(int index, T v) {
+      Two<T> set(int index, T v) {
         if (index < a.size()) {
-          return new Two<T>(a.nth(index, v), b);
+          return new Two<T>(a.set(index, v), b);
         }
         index -= a.size();
         if (index < b.size()) {
-          return new Two<T>(a, b.nth(index, v));
+          return new Two<T>(a, b.set(index, v));
         }
         throw new RangeException();
       }
@@ -276,33 +276,33 @@ public class FingerTreeSeq<T> implements Seq<T> {
       }
 
       @Override
-      T nth(int index) {
+      T get(int index) {
         if (index < a.size()) {
-          return a.nth(index);
+          return a.get(index);
         }
         index -= a.size();
         if (index < b.size()) {
-          return b.nth(index);
+          return b.get(index);
         }
         index -= b.size();
         if (index < c.size()) {
-          return c.nth(index);
+          return c.get(index);
         }
         throw new RangeException();
       }
 
       @Override
-      Three<T> nth(int index, T v) {
+      Three<T> set(int index, T v) {
         if (index < a.size()) {
-          return new Three<T>(a.nth(index, v), b, c);
+          return new Three<T>(a.set(index, v), b, c);
         }
         index -= a.size();
         if (index < b.size()) {
-          return new Three<T>(a, b.nth(index, v), c);
+          return new Three<T>(a, b.set(index, v), c);
         }
         index -= b.size();
         if (index < c.size()) {
-          return new Three<T>(a, b, c.nth(index, v));
+          return new Three<T>(a, b, c.set(index, v));
         }
         throw new RangeException();
       }
@@ -355,41 +355,41 @@ public class FingerTreeSeq<T> implements Seq<T> {
       }
 
       @Override
-      T nth(int index) {
+      T get(int index) {
         if (index < a.size()) {
-          return a.nth(index);
+          return a.get(index);
         }
         index -= a.size();
         if (index < b.size()) {
-          return b.nth(index);
+          return b.get(index);
         }
         index -= b.size();
         if (index < c.size()) {
-          return c.nth(index);
+          return c.get(index);
         }
         index -= c.size();
         if (index < d.size()) {
-          return d.nth(index);
+          return d.get(index);
         }
         throw new RangeException();
       }
 
       @Override
-      Four<T> nth(int index, T v) {
+      Four<T> set(int index, T v) {
         if (index < a.size()) {
-          return new Four<T>(a.nth(index, v), b, c, d);
+          return new Four<T>(a.set(index, v), b, c, d);
         }
         index -= a.size();
         if (index < b.size()) {
-          return new Four<T>(a, b.nth(index, v), c, d);
+          return new Four<T>(a, b.set(index, v), c, d);
         }
         index -= b.size();
         if (index < c.size()) {
-          return new Four<T>(a, b, c.nth(index, v), d);
+          return new Four<T>(a, b, c.set(index, v), d);
         }
         index -= c.size();
         if (index < d.size()) {
-          return new Four<T>(a, b, c, d.nth(index, v));
+          return new Four<T>(a, b, c, d.set(index, v));
         }
         throw new RangeException();
       }
@@ -403,7 +403,7 @@ public class FingerTreeSeq<T> implements Seq<T> {
 
   private abstract static class Node<T> extends Fragment<T> implements Printable {
     @Override
-    abstract Node<T> nth(int index, T v);
+    abstract Node<T> set(int index, T v);
 
     static final class Node2<T> extends Node<T> {
       final Fragment<T> a, b;
@@ -426,25 +426,25 @@ public class FingerTreeSeq<T> implements Seq<T> {
       }
 
       @Override
-      T nth(int index) {
+      T get(int index) {
         if (index < a.size()) {
-          return a.nth(index);
+          return a.get(index);
         }
         index -= a.size();
         if (index < b.size()) {
-          return b.nth(index);
+          return b.get(index);
         }
         throw new RangeException();
       }
 
       @Override
-      Node2<T> nth(int index, T v) {
+      Node2<T> set(int index, T v) {
         if (index < a.size()) {
-          return new Node2<T>(a.nth(index, v), b);
+          return new Node2<T>(a.set(index, v), b);
         }
         index -= a.size();
         if (index < b.size()) {
-          return new Node2<T>(a, b.nth(index, v));
+          return new Node2<T>(a, b.set(index, v));
         }
         throw new RangeException();
       }
@@ -477,33 +477,33 @@ public class FingerTreeSeq<T> implements Seq<T> {
       }
 
       @Override
-      T nth(int index) {
+      T get(int index) {
         if (index < a.size()) {
-          return a.nth(index);
+          return a.get(index);
         }
         index -= a.size();
         if (index < b.size()) {
-          return b.nth(index);
+          return b.get(index);
         }
         index -= b.size();
         if (index < c.size()) {
-          return c.nth(index);
+          return c.get(index);
         }
         throw new RangeException();
       }
 
       @Override
-      Node3<T> nth(int index, T v) {
+      Node3<T> set(int index, T v) {
         if (index < a.size()) {
-          return new Node3<T>(a.nth(index, v), b, c);
+          return new Node3<T>(a.set(index, v), b, c);
         }
         index -= a.size();
         if (index < b.size()) {
-          return new Node3<T>(a, b.nth(index, v), c);
+          return new Node3<T>(a, b.set(index, v), c);
         }
         index -= b.size();
         if (index < c.size()) {
-          return new Node3<T>(a, b, c.nth(index, v));
+          return new Node3<T>(a, b, c.set(index, v));
         }
         throw new RangeException();
       }
@@ -521,7 +521,7 @@ public class FingerTreeSeq<T> implements Seq<T> {
     abstract Item<T> snoc(Fragment<T> v);
 
     @Override
-    abstract Item<T> nth(int index, T v);
+    abstract Item<T> set(int index, T v);
 
     static final class Empty<T> extends Item<T> {
       @Override
@@ -545,12 +545,12 @@ public class FingerTreeSeq<T> implements Seq<T> {
       }
 
       @Override
-      T nth(int index) {
+      T get(int index) {
         throw new RangeException();
       }
 
       @Override
-      Empty<T> nth(int index, T v) {
+      Empty<T> set(int index, T v) {
         throw new RangeException();
       }
 
@@ -594,13 +594,13 @@ public class FingerTreeSeq<T> implements Seq<T> {
       }
 
       @Override
-      T nth(int index) {
-        return f.nth(index);
+      T get(int index) {
+        return f.get(index);
       }
 
       @Override
-      Single<T> nth(int index, T v) {
-        return new Single<T>(f.nth(index, v));
+      Single<T> set(int index, T v) {
+        return new Single<T>(f.set(index, v));
       }
 
       @Override
@@ -643,33 +643,33 @@ public class FingerTreeSeq<T> implements Seq<T> {
       }
 
       @Override
-      T nth(int index) {
+      T get(int index) {
         if (index < l.size()) {
-          return l.nth(index);
+          return l.get(index);
         }
         index -= l.size();
         if (index < m.size()) {
-          return m.nth(index);
+          return m.get(index);
         }
         index -= m.size();
         if (index < r.size()) {
-          return r.nth(index);
+          return r.get(index);
         }
         throw new RangeException();
       }
 
       @Override
-      Deep<T> nth(int index, T v) {
+      Deep<T> set(int index, T v) {
         if (index < l.size()) {
-          return new Deep<T>(l.nth(index, v), m, r);
+          return new Deep<T>(l.set(index, v), m, r);
         }
         index -= l.size();
         if (index < m.size()) {
-          return new Deep<T>(l, m.nth(index, v), r);
+          return new Deep<T>(l, m.set(index, v), r);
         }
         index -= m.size();
         if (index < r.size()) {
-          return new Deep<T>(l, m, r.nth(index, v));
+          return new Deep<T>(l, m, r.set(index, v));
         }
         throw new RangeException();
       }

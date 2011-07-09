@@ -64,13 +64,13 @@ public class ForestSeq<T> implements Seq<T> {
   }
 
   @Override
-  public T nth(int index)
+  public T get(int index)
       throws RangeException {
     return head.nth(index);
   }
 
   @Override
-  public ForestSeq<T> nth(int index, T v)
+  public ForestSeq<T> set(int index, T v)
       throws RangeException {
     return new ForestSeq<T>(head.nth(index, v));
   }

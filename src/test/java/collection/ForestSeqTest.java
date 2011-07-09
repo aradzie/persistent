@@ -24,7 +24,7 @@ public class ForestSeqTest {
       assertEquals(n, (int) t.head());
       assertEquals(n + 1, t.size());
       for (int m = 0; m < t.size(); m++) {
-        assertEquals(n - m, (int) t.nth(m));
+        assertEquals(n - m, (int) t.get(m));
       }
     }
   }
@@ -38,7 +38,7 @@ public class ForestSeqTest {
       assertEquals(0, (int) t.head());
       assertEquals(n + 1, t.size());
       for (int m = 0; m < t.size(); m++) {
-        assertEquals(m, (int) t.nth(m));
+        assertEquals(m, (int) t.get(m));
       }
     }
   }
@@ -50,16 +50,16 @@ public class ForestSeqTest {
       t = t.cons(n);
     }
     for (int n = 0; n < t.size(); n++) {
-      t = t.nth(n, 0);
+      t = t.set(n, 0);
     }
     for (int n = 0; n < t.size(); n++) {
-      assertEquals(0, (int) t.nth(n));
+      assertEquals(0, (int) t.get(n));
     }
     for (int n = 0; n < t.size(); n++) {
-      t = t.nth(n, 1);
+      t = t.set(n, 1);
     }
     for (int n = 0; n < t.size(); n++) {
-      assertEquals(1, (int) t.nth(n));
+      assertEquals(1, (int) t.get(n));
     }
   }
 }

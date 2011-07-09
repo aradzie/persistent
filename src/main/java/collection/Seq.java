@@ -70,7 +70,7 @@ public interface Seq<T> {
    * @return The element with the specified index.
    * @throws RangeException If element index is out of range.
    */
-  T nth(int index)
+  T get(int index)
       throws RangeException;
 
   /**
@@ -82,7 +82,7 @@ public interface Seq<T> {
    * @return Updated list.
    * @throws RangeException If element index is out of range.
    */
-  Seq<T> nth(int index, T v)
+  Seq<T> set(int index, T v)
       throws RangeException;
 
   /** Indicates that a list element index is out of range. */
