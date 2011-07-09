@@ -3,6 +3,15 @@ package collection;
 import debug.IndentingPrintWriter;
 import debug.Printable;
 
+/**
+ * A sequence based on the monoidally annotated 2-3 finger tree
+ * data structure as described in the publication
+ * <a href="http://www.soi.city.ac.uk/~ross/papers/FingerTree.html">Finger
+ * Trees: A Simple General-purpose Data Structure</a> by Ralf Hinze and
+ * Ross Paterson.
+ *
+ * @param <T> Element type.
+ */
 public final class FingerTreeSeq<T> implements Seq<T> {
   public interface Visitor<T> extends Seq.Visitor<T> {
     @Override
@@ -15,32 +24,14 @@ public final class FingerTreeSeq<T> implements Seq<T> {
     void after();
   }
 
-  private final Item<T> root;
+  private final Tree<T> root;
 
   public FingerTreeSeq() {
-    root = new Item.Empty<T>();
+    root = new Tree.Empty<T>();
   }
 
-  private FingerTreeSeq(Item<T> that) {
+  private FingerTreeSeq(Tree<T> that) {
     root = that;
-  }
-
-  @Override
-  public void accept(Seq.Visitor<T> visitor) {
-    if (visitor instanceof Visitor) {
-      accept((Visitor<T>) visitor);
-    }
-    else {
-      visitor.before(size());
-      root.accept(visitor);
-      visitor.after();
-    }
-  }
-
-  public void accept(Visitor<T> visitor) {
-    visitor.before(size());
-    root.accept(visitor);
-    visitor.after();
   }
 
   @Override
@@ -52,7 +43,7 @@ public final class FingerTreeSeq<T> implements Seq<T> {
   @Override
   public FingerTreeSeq<T> tail()
       throws RangeException {
-    throw new UnsupportedOperationException();
+    return new FingerTreeSeq<T>(root.tail());
   }
 
   @Override
@@ -96,6 +87,24 @@ public final class FingerTreeSeq<T> implements Seq<T> {
     return new FingerTreeSeq<T>(root.set(index, v));
   }
 
+  @Override
+  public void accept(Seq.Visitor<T> visitor) {
+    if (visitor instanceof Visitor) {
+      accept((Visitor<T>) visitor);
+    }
+    else {
+      visitor.before(size());
+      root.accept(visitor);
+      visitor.after();
+    }
+  }
+
+  public void accept(Visitor<T> visitor) {
+    visitor.before(size());
+    root.accept(visitor);
+    visitor.after();
+  }
+
   void dump(IndentingPrintWriter w) {
     root.print(w);
     w.write("\n");
@@ -103,15 +112,17 @@ public final class FingerTreeSeq<T> implements Seq<T> {
   }
 
   private abstract static class Fragment<T> {
-    abstract void accept(Seq.Visitor<T> visitor);
-
     abstract T head();
+
+    abstract Digit<T> digit();
 
     abstract int size();
 
     abstract T get(int index);
 
     abstract Fragment<T> set(int index, T v);
+
+    abstract void accept(Seq.Visitor<T> visitor);
   }
 
   private static final class Elem<T> extends Fragment<T> implements Printable {
@@ -122,13 +133,13 @@ public final class FingerTreeSeq<T> implements Seq<T> {
     }
 
     @Override
-    void accept(Seq.Visitor<T> visitor) {
-      visitor.visit(v);
+    T head() {
+      return v;
     }
 
     @Override
-    T head() {
-      return v;
+    Digit<T> digit() {
+      throw new IllegalStateException(); // unreachable
     }
 
     @Override
@@ -153,15 +164,36 @@ public final class FingerTreeSeq<T> implements Seq<T> {
     }
 
     @Override
+    void accept(Seq.Visitor<T> visitor) {
+      visitor.visit(v);
+    }
+
+    @Override
     public void print(IndentingPrintWriter w) {
       Printable.Util.print(w, v);
     }
   }
 
   private abstract static class Digit<T> extends Fragment<T> implements Printable {
-    abstract Item.Deep<T> cons(Fragment<T> v, Item<T> item, Digit<T> digit);
+    abstract Tree.Deep<T> cons(Fragment<T> v, Tree<T> m, Digit<T> r);
 
-    abstract Item.Deep<T> snoc(Digit<T> digit, Item<T> item, Fragment<T> v);
+    abstract Tree.Deep<T> snoc(Digit<T> l, Tree<T> m, Fragment<T> v);
+
+    @Override
+    abstract T head();
+
+    abstract Tree<T> tail(Tree<T> m, Digit<T> r);
+
+    @Override
+    abstract Digit<T> digit();
+
+    abstract Tree<T> tree();
+
+    @Override
+    abstract int size();
+
+    @Override
+    abstract T get(int index);
 
     @Override
     abstract Digit<T> set(int index, T v);
@@ -176,23 +208,33 @@ public final class FingerTreeSeq<T> implements Seq<T> {
       }
 
       @Override
-      Item.Deep<T> cons(Fragment<T> v, Item<T> item, Digit<T> digit) {
-        return new Item.Deep<T>(new Two<T>(v, a), item, digit);
+      Tree.Deep<T> cons(Fragment<T> v, Tree<T> m, Digit<T> r) {
+        return new Tree.Deep<T>(new Two<T>(v, a), m, r);
       }
 
       @Override
-      Item.Deep<T> snoc(Digit<T> digit, Item<T> item, Fragment<T> v) {
-        return new Item.Deep<T>(digit, item, new Two<T>(a, v));
-      }
-
-      @Override
-      void accept(Seq.Visitor<T> visitor) {
-        a.accept(visitor);
+      Tree.Deep<T> snoc(Digit<T> l, Tree<T> m, Fragment<T> v) {
+        return new Tree.Deep<T>(l, m, new Two<T>(a, v));
       }
 
       @Override
       T head() {
         return a.head();
+      }
+
+      @Override
+      Tree<T> tail(Tree<T> m, Digit<T> r) {
+        return m.tree(r);
+      }
+
+      @Override
+      Digit<T> digit() {
+        return a.digit();
+      }
+
+      @Override
+      Tree<T> tree() {
+        return new Tree.Single<T>(a);
       }
 
       @Override
@@ -217,6 +259,11 @@ public final class FingerTreeSeq<T> implements Seq<T> {
       }
 
       @Override
+      void accept(Seq.Visitor<T> visitor) {
+        a.accept(visitor);
+      }
+
+      @Override
       public void print(IndentingPrintWriter w) {
         printDigit(w, "One", this, a);
       }
@@ -234,24 +281,34 @@ public final class FingerTreeSeq<T> implements Seq<T> {
       }
 
       @Override
-      Item.Deep<T> cons(Fragment<T> v, Item<T> item, Digit<T> digit) {
-        return new Item.Deep<T>(new Three<T>(v, a, b), item, digit);
+      Tree.Deep<T> cons(Fragment<T> v, Tree<T> m, Digit<T> r) {
+        return new Tree.Deep<T>(new Three<T>(v, a, b), m, r);
       }
 
       @Override
-      Item.Deep<T> snoc(Digit<T> digit, Item<T> item, Fragment<T> v) {
-        return new Item.Deep<T>(digit, item, new Three<T>(a, b, v));
-      }
-
-      @Override
-      void accept(Seq.Visitor<T> visitor) {
-        a.accept(visitor);
-        b.accept(visitor);
+      Tree.Deep<T> snoc(Digit<T> l, Tree<T> m, Fragment<T> v) {
+        return new Tree.Deep<T>(l, m, new Three<T>(a, b, v));
       }
 
       @Override
       T head() {
         return a.head();
+      }
+
+      @Override
+      Tree<T> tail(Tree<T> m, Digit<T> r) {
+        return new Tree.Deep<T>(new One<T>(b), m, r);
+      }
+
+      @Override
+      Digit<T> digit() {
+        return a.digit();
+      }
+
+      @Override
+      Tree<T> tree() {
+        return new Tree.Deep<T>(
+            new Digit.One<T>(a), new Tree.Empty<T>(), new Digit.One<T>(b));
       }
 
       @Override
@@ -284,6 +341,12 @@ public final class FingerTreeSeq<T> implements Seq<T> {
       }
 
       @Override
+      void accept(Seq.Visitor<T> visitor) {
+        a.accept(visitor);
+        b.accept(visitor);
+      }
+
+      @Override
       public void print(IndentingPrintWriter w) {
         printDigit(w, "Two", this, a, b);
       }
@@ -303,25 +366,34 @@ public final class FingerTreeSeq<T> implements Seq<T> {
       }
 
       @Override
-      Item.Deep<T> cons(Fragment<T> v, Item<T> item, Digit<T> digit) {
-        return new Item.Deep<T>(new Four<T>(v, a, b, c), item, digit);
+      Tree.Deep<T> cons(Fragment<T> v, Tree<T> m, Digit<T> r) {
+        return new Tree.Deep<T>(new Four<T>(v, a, b, c), m, r);
       }
 
       @Override
-      Item.Deep<T> snoc(Digit<T> digit, Item<T> item, Fragment<T> v) {
-        return new Item.Deep<T>(digit, item, new Four<T>(a, b, c, v));
-      }
-
-      @Override
-      void accept(Seq.Visitor<T> visitor) {
-        a.accept(visitor);
-        b.accept(visitor);
-        c.accept(visitor);
+      Tree.Deep<T> snoc(Digit<T> l, Tree<T> m, Fragment<T> v) {
+        return new Tree.Deep<T>(l, m, new Four<T>(a, b, c, v));
       }
 
       @Override
       T head() {
         return a.head();
+      }
+
+      @Override
+      Tree<T> tail(Tree<T> m, Digit<T> r) {
+        return new Tree.Deep<T>(new Two<T>(b, c), m, r);
+      }
+
+      @Override
+      Digit<T> digit() {
+        return a.digit();
+      }
+
+      @Override
+      Tree<T> tree() {
+        return new Tree.Deep<T>(
+            new Digit.Two<T>(a, b), new Tree.Empty<T>(), new Digit.One<T>(c));
       }
 
       @Override
@@ -362,6 +434,13 @@ public final class FingerTreeSeq<T> implements Seq<T> {
       }
 
       @Override
+      void accept(Seq.Visitor<T> visitor) {
+        a.accept(visitor);
+        b.accept(visitor);
+        c.accept(visitor);
+      }
+
+      @Override
       public void print(IndentingPrintWriter w) {
         printDigit(w, "Three", this, a, b, c);
       }
@@ -383,32 +462,36 @@ public final class FingerTreeSeq<T> implements Seq<T> {
       }
 
       @Override
-      Item.Deep<T> cons(Fragment<T> v, Item<T> item, Digit<T> digit) {
-        return new Item.Deep<T>(
-            new Digit.Two<T>(v, a),
-            item.cons(new Node.Node3<T>(b, c, d)),
-            digit);
+      Tree.Deep<T> cons(Fragment<T> v, Tree<T> m, Digit<T> r) {
+        return new Tree.Deep<T>(
+            new Digit.Two<T>(v, a), m.cons(new Node.Node3<T>(b, c, d)), r);
       }
 
       @Override
-      Item.Deep<T> snoc(Digit<T> digit, Item<T> item, Fragment<T> v) {
-        return new Item.Deep<T>(
-            digit,
-            item.snoc(new Node.Node3<T>(a, b, c)),
-            new Digit.Two<T>(d, v));
-      }
-
-      @Override
-      void accept(Seq.Visitor<T> visitor) {
-        a.accept(visitor);
-        b.accept(visitor);
-        c.accept(visitor);
-        d.accept(visitor);
+      Tree.Deep<T> snoc(Digit<T> l, Tree<T> m, Fragment<T> v) {
+        return new Tree.Deep<T>(
+            l, m.snoc(new Node.Node3<T>(a, b, c)), new Digit.Two<T>(d, v));
       }
 
       @Override
       T head() {
         return a.head();
+      }
+
+      @Override
+      Tree<T> tail(Tree<T> m, Digit<T> r) {
+        return new Tree.Deep<T>(new Three<T>(b, c, d), m, r);
+      }
+
+      @Override
+      Digit<T> digit() {
+        return a.digit();
+      }
+
+      @Override
+      Tree<T> tree() {
+        return new Tree.Deep<T>(
+            new Digit.Three<T>(a, b, c), new Tree.Empty<T>(), new Digit.One<T>(d));
       }
 
       @Override
@@ -457,6 +540,14 @@ public final class FingerTreeSeq<T> implements Seq<T> {
       }
 
       @Override
+      void accept(Seq.Visitor<T> visitor) {
+        a.accept(visitor);
+        b.accept(visitor);
+        c.accept(visitor);
+        d.accept(visitor);
+      }
+
+      @Override
       public void print(IndentingPrintWriter w) {
         printDigit(w, "Four", this, a, b, c, d);
       }
@@ -464,6 +555,9 @@ public final class FingerTreeSeq<T> implements Seq<T> {
   }
 
   private abstract static class Node<T> extends Fragment<T> implements Printable {
+    @Override
+    abstract Digit<T> digit();
+
     @Override
     abstract Node<T> set(int index, T v);
 
@@ -478,14 +572,13 @@ public final class FingerTreeSeq<T> implements Seq<T> {
       }
 
       @Override
-      void accept(Seq.Visitor<T> visitor) {
-        a.accept(visitor);
-        b.accept(visitor);
+      T head() {
+        return a.head();
       }
 
       @Override
-      T head() {
-        return a.head();
+      Digit<T> digit() {
+        return new Digit.Two<T>(a, b);
       }
 
       @Override
@@ -518,6 +611,12 @@ public final class FingerTreeSeq<T> implements Seq<T> {
       }
 
       @Override
+      void accept(Seq.Visitor<T> visitor) {
+        a.accept(visitor);
+        b.accept(visitor);
+      }
+
+      @Override
       public void print(IndentingPrintWriter w) {
         printNode(w, "Two", this, a, b);
       }
@@ -535,15 +634,13 @@ public final class FingerTreeSeq<T> implements Seq<T> {
       }
 
       @Override
-      void accept(Seq.Visitor<T> visitor) {
-        a.accept(visitor);
-        b.accept(visitor);
-        c.accept(visitor);
+      T head() {
+        return a.head();
       }
 
       @Override
-      T head() {
-        return a.head();
+      Digit<T> digit() {
+        return new Digit.Three<T>(a, b, c);
       }
 
       @Override
@@ -584,37 +681,63 @@ public final class FingerTreeSeq<T> implements Seq<T> {
       }
 
       @Override
+      void accept(Seq.Visitor<T> visitor) {
+        a.accept(visitor);
+        b.accept(visitor);
+        c.accept(visitor);
+      }
+
+      @Override
       public void print(IndentingPrintWriter w) {
         printNode(w, "Three", this, a, b, c);
       }
     }
   }
 
-  private abstract static class Item<T> extends Fragment<T> implements Printable {
-    abstract Item<T> cons(Fragment<T> v);
+  private abstract static class Tree<T> extends Fragment<T> implements Printable {
+    abstract Tree<T> cons(Fragment<T> v);
 
-    abstract Item<T> snoc(Fragment<T> v);
+    abstract Tree<T> snoc(Fragment<T> v);
+
+    abstract Tree<T> tail();
 
     @Override
-    abstract Item<T> set(int index, T v);
+    abstract Digit<T> digit();
 
-    static final class Empty<T> extends Item<T> {
+    abstract Tree<T> tree(Digit<T> r);
+
+    @Override
+    abstract Tree<T> set(int index, T v);
+
+    static final class Empty<T> extends Tree<T> {
       @Override
       Single<T> cons(Fragment<T> v) {
-        return new Item.Single<T>(v);
+        return new Tree.Single<T>(v);
       }
 
       @Override
       Single<T> snoc(Fragment<T> v) {
-        return new Item.Single<T>(v);
+        return new Tree.Single<T>(v);
       }
-
-      @Override
-      void accept(Seq.Visitor<T> tVisitor) {}
 
       @Override
       T head() {
         throw new RangeException();
+      }
+
+      @Override
+      Tree<T> tail() {
+        throw new RangeException();
+      }
+
+      @Override
+      Digit<T> digit() {
+        throw new IllegalStateException(); // unreachable
+      }
+
+      @Override
+      Tree<T> tree(Digit<T> r) {
+        return r.tree();
       }
 
       @Override
@@ -633,12 +756,15 @@ public final class FingerTreeSeq<T> implements Seq<T> {
       }
 
       @Override
+      void accept(Seq.Visitor<T> visitor) {}
+
+      @Override
       public void print(IndentingPrintWriter w) {
         w.write("[EMPTY]");
       }
     }
 
-    static final class Single<T> extends Item<T> {
+    static final class Single<T> extends Tree<T> {
       final Fragment<T> f;
 
       Single(Fragment<T> f) {
@@ -647,28 +773,35 @@ public final class FingerTreeSeq<T> implements Seq<T> {
 
       @Override
       Deep<T> cons(Fragment<T> v) {
-        return new Item.Deep<T>(
-            new Digit.One<T>(v),
-            new Item.Empty<T>(),
-            new Digit.One<T>(f));
+        return new Tree.Deep<T>(
+            new Digit.One<T>(v), new Empty<T>(), new Digit.One<T>(f));
       }
 
       @Override
       Deep<T> snoc(Fragment<T> v) {
-        return new Item.Deep<T>(
-            new Digit.One<T>(f),
-            new Item.Empty<T>(),
-            new Digit.One<T>(v));
-      }
-
-      @Override
-      void accept(Seq.Visitor<T> visitor) {
-        f.accept(visitor);
+        return new Tree.Deep<T>(
+            new Digit.One<T>(f), new Empty<T>(), new Digit.One<T>(v));
       }
 
       @Override
       T head() {
         return f.head();
+      }
+
+      @Override
+      Tree<T> tail() {
+        return new Empty<T>();
+      }
+
+      @Override
+      Digit<T> digit() {
+        throw new UnsupportedOperationException();
+      }
+
+      @Override
+      Tree<T> tree(Digit<T> r) {
+        return new Tree.Deep<T>(
+            f.digit(), new Tree.Empty<T>(), r);
       }
 
       @Override
@@ -687,18 +820,23 @@ public final class FingerTreeSeq<T> implements Seq<T> {
       }
 
       @Override
+      void accept(Seq.Visitor<T> visitor) {
+        f.accept(visitor);
+      }
+
+      @Override
       public void print(IndentingPrintWriter w) {
         printSingle(w, this);
       }
     }
 
-    static final class Deep<T> extends Item<T> {
+    static final class Deep<T> extends Tree<T> {
       final Digit<T> l;
-      final Item<T> m;
+      final Tree<T> m;
       final Digit<T> r;
       final int size;
 
-      Deep(Digit<T> l, Item<T> m, Digit<T> r) {
+      Deep(Digit<T> l, Tree<T> m, Digit<T> r) {
         this.l = l;
         this.m = m;
         this.r = r;
@@ -706,7 +844,7 @@ public final class FingerTreeSeq<T> implements Seq<T> {
       }
 
       @Override
-      Item<T> cons(Fragment<T> v) {
+      Tree<T> cons(Fragment<T> v) {
         return l.cons(v, m, r);
       }
 
@@ -716,15 +854,23 @@ public final class FingerTreeSeq<T> implements Seq<T> {
       }
 
       @Override
-      void accept(Seq.Visitor<T> visitor) {
-        l.accept(visitor);
-        m.accept(visitor);
-        r.accept(visitor);
+      T head() {
+        return l.head();
       }
 
       @Override
-      T head() {
-        return l.head();
+      Tree<T> tail() {
+        return l.tail(m, r);
+      }
+
+      @Override
+      Digit<T> digit() {
+        return l.digit();
+      }
+
+      @Override
+      Tree<T> tree(Digit<T> r) {
+        return new Tree.Deep<T>(digit(), tail(), r);
       }
 
       @Override
@@ -762,6 +908,13 @@ public final class FingerTreeSeq<T> implements Seq<T> {
           return new Deep<T>(l, m, r.set(index, v));
         }
         throw new RangeException();
+      }
+
+      @Override
+      void accept(Seq.Visitor<T> visitor) {
+        l.accept(visitor);
+        m.accept(visitor);
+        r.accept(visitor);
       }
 
       @Override
@@ -817,7 +970,7 @@ public final class FingerTreeSeq<T> implements Seq<T> {
   }
 
   private static <T> void printSingle(IndentingPrintWriter w,
-                                      Item.Single<T> single) {
+                                      Tree.Single<T> single) {
     if (single.f instanceof Printable) {
       w.write("Single");
       w.write("<");
@@ -833,7 +986,7 @@ public final class FingerTreeSeq<T> implements Seq<T> {
   }
 
   private static <T> void printDeep(IndentingPrintWriter w,
-                                    Item.Deep<T> deep) {
+                                    Tree.Deep<T> deep) {
     w.write("Deep");
     w.write("<");
     w.write(String.valueOf(deep.size()));

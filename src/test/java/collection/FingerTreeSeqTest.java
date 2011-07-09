@@ -1,6 +1,5 @@
 package collection;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -11,7 +10,6 @@ public class FingerTreeSeqTest {
     new FingerTreeSeq<String>().head();
   }
 
-  @Ignore
   @Test(expected = Seq.RangeException.class)
   public void tailOfEmptySeq() {
     new FingerTreeSeq<String>().tail();
@@ -75,6 +73,31 @@ public class FingerTreeSeqTest {
     });
     t.accept(new Sum());
     //t.dump(new IndentingPrintWriter(System.out));
+  }
+
+  @Test
+  public void tail() {
+    FingerTreeSeq<Integer> t = new FingerTreeSeq<Integer>();
+    t = t.cons(1);
+    t = t.tail();
+    assertEquals(0, t.size());
+    t = t.cons(1);
+    t = t.cons(2);
+    t = t.snoc(0);
+    t = t.tail();
+    t = t.tail();
+    t = t.tail();
+    assertEquals(0, t.size());
+    for (int n = 0; n < 1000; n++) {
+      t = t.cons(n);
+      assertEquals(n, (int) t.head());
+      assertEquals(n + 1, t.size());
+    }
+    for (int n = 1000; n > 0; n--) {
+      assertEquals(n - 1, (int) t.head());
+      t = t.tail();
+      assertEquals(n - 1, t.size());
+    }
   }
 
   @Test
