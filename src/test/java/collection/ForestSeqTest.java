@@ -1,6 +1,5 @@
 package collection;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -25,21 +24,6 @@ public class ForestSeqTest {
       assertEquals(n + 1, t.size());
       for (int m = 0; m < t.size(); m++) {
         assertEquals(n - m, (int) t.get(m));
-      }
-    }
-    t.accept(new Print());
-  }
-
-  @Test
-  @Ignore
-  public void snoc() {
-    ForestSeq<Integer> t = new ForestSeq<Integer>();
-    for (int n = 0; n < 1000; n++) {
-      t = t.snoc(n);
-      assertEquals(0, (int) t.head());
-      assertEquals(n + 1, t.size());
-      for (int m = 0; m < t.size(); m++) {
-        assertEquals(m, (int) t.get(m));
       }
     }
     t.accept(new Print());

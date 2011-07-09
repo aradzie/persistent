@@ -38,24 +38,6 @@ public final class ForestSeq<T> implements Seq<T> {
   }
 
   @Override
-  public void accept(Seq.Visitor<T> visitor) {
-    if (visitor instanceof Visitor) {
-      accept((Visitor<T>) visitor);
-    }
-    else {
-      visitor.before(size());
-      head.accept(visitor);
-      visitor.after();
-    }
-  }
-
-  public void accept(Visitor<T> visitor) {
-    visitor.before(size());
-    head.accept(visitor);
-    visitor.after();
-  }
-
-  @Override
   public T head()
       throws RangeException {
     return head.head();
@@ -99,13 +81,31 @@ public final class ForestSeq<T> implements Seq<T> {
   @Override
   public T get(int index)
       throws RangeException {
-    return head.nth(index);
+    return head.get(index);
   }
 
   @Override
   public ForestSeq<T> set(int index, T v)
       throws RangeException {
-    return new ForestSeq<T>(head.nth(index, v));
+    return new ForestSeq<T>(head.set(index, v));
+  }
+
+  @Override
+  public void accept(Seq.Visitor<T> visitor) {
+    if (visitor instanceof Visitor) {
+      accept((Visitor<T>) visitor);
+    }
+    else {
+      visitor.before(size());
+      head.accept(visitor);
+      visitor.after();
+    }
+  }
+
+  public void accept(Visitor<T> visitor) {
+    visitor.before(size());
+    head.accept(visitor);
+    visitor.after();
   }
 
   private static class Tree<T> {
@@ -126,22 +126,6 @@ public final class ForestSeq<T> implements Seq<T> {
       this.size = size;
       this.next = next;
       this.seqSize = this.next.seqSize + this.size;
-    }
-
-    void accept(Seq.Visitor<T> visitor) {
-      if (size > 0) {
-        root.accept(visitor);
-        next.accept(visitor);
-      }
-    }
-
-    void accept(Visitor<T> visitor) {
-      if (size > 0) {
-        visitor.enterTree(size);
-        root.accept(visitor);
-        visitor.exitTree();
-        next.accept(visitor);
-      }
     }
 
     T head() {
@@ -173,27 +157,43 @@ public final class ForestSeq<T> implements Seq<T> {
       }
     }
 
-    T nth(int index) {
+    T get(int index) {
       if (size == 0) {
         throw new RangeException();
       }
       if (index < size) {
-        return root.nth(size, index);
+        return root.get(size, index);
       }
       else {
-        return next.nth(index - size);
+        return next.get(index - size);
       }
     }
 
-    Tree<T> nth(int index, T v) {
+    Tree<T> set(int index, T v) {
       if (size == 0) {
         throw new RangeException();
       }
       if (index < size) {
-        return new Tree<T>(root.nth(size, index, v), size, next);
+        return new Tree<T>(root.set(size, index, v), size, next);
       }
       else {
-        return new Tree<T>(root, size, next.nth(index - size, v));
+        return new Tree<T>(root, size, next.set(index - size, v));
+      }
+    }
+
+    void accept(Seq.Visitor<T> visitor) {
+      if (size > 0) {
+        root.accept(visitor);
+        next.accept(visitor);
+      }
+    }
+
+    void accept(Visitor<T> visitor) {
+      if (size > 0) {
+        visitor.enterTree(size);
+        root.accept(visitor);
+        visitor.exitTree();
+        next.accept(visitor);
       }
     }
   }
@@ -208,6 +208,32 @@ public final class ForestSeq<T> implements Seq<T> {
       this.r = r;
     }
 
+    T get(int size, int index) {
+      if (index == 0) {
+        return v;
+      }
+      size = size / 2;
+      if (index <= size) {
+        return l.get(size, index - 1);
+      }
+      else {
+        return r.get(size, index - 1 - size);
+      }
+    }
+
+    Node<T> set(int size, int index, T v) {
+      if (index == 0) {
+        return new Node<T>(v, l, r);
+      }
+      size = size / 2;
+      if (index <= size) {
+        return new Node<T>(v, l.set(size, index - 1, v), r);
+      }
+      else {
+        return new Node<T>(v, l, r.set(size, index - 1 - size, v));
+      }
+    }
+
     void accept(Seq.Visitor<T> visitor) {
       // Pre-order traversal.
       visitor.visit(v);
@@ -216,32 +242,6 @@ public final class ForestSeq<T> implements Seq<T> {
       }
       if (r != null) {
         r.accept(visitor);
-      }
-    }
-
-    T nth(int size, int index) {
-      if (index == 0) {
-        return v;
-      }
-      size = size / 2;
-      if (index <= size) {
-        return l.nth(size, index - 1);
-      }
-      else {
-        return r.nth(size, index - 1 - size);
-      }
-    }
-
-    Node<T> nth(int size, int index, T v) {
-      if (index == 0) {
-        return new Node<T>(v, l, r);
-      }
-      size = size / 2;
-      if (index <= size) {
-        return new Node<T>(v, l.nth(size, index - 1, v), r);
-      }
-      else {
-        return new Node<T>(v, l, r.nth(size, index - 1 - size, v));
       }
     }
   }
