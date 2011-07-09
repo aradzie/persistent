@@ -84,15 +84,15 @@ public class FingerTreeSeq<T> implements Seq<T> {
   }
 
   private static final class Elem<T> extends Fragment<T> implements Printable {
-    final T e;
+    final T v;
 
-    Elem(T e) {
-      this.e = e;
+    Elem(T v) {
+      this.v = v;
     }
 
     @Override
     T head() {
-      return e;
+      return v;
     }
 
     @Override
@@ -103,7 +103,7 @@ public class FingerTreeSeq<T> implements Seq<T> {
     @Override
     T nth(int index) {
       if (index == 0) {
-        return e;
+        return v;
       }
       throw new RangeException();
     }
@@ -118,7 +118,7 @@ public class FingerTreeSeq<T> implements Seq<T> {
 
     @Override
     public void print(IndentingPrintWriter w) {
-      Printable.Util.print(w, e);
+      Printable.Util.print(w, v);
     }
   }
 
@@ -132,11 +132,11 @@ public class FingerTreeSeq<T> implements Seq<T> {
 
     static final class One<T> extends Digit<T> {
       final Fragment<T> a;
-      final int v;
+      final int size;
 
       One(Fragment<T> a) {
         this.a = a;
-        v = this.a.size();
+        size = this.a.size();
       }
 
       @Override
@@ -156,7 +156,7 @@ public class FingerTreeSeq<T> implements Seq<T> {
 
       @Override
       int size() {
-        return v;
+        return size;
       }
 
       @Override
@@ -184,12 +184,12 @@ public class FingerTreeSeq<T> implements Seq<T> {
     static final class Two<T> extends Digit<T> {
       final Fragment<T> a;
       final Fragment<T> b;
-      final int v;
+      final int size;
 
       Two(Fragment<T> a, Fragment<T> b) {
         this.a = a;
         this.b = b;
-        v = this.a.size() + this.b.size();
+        size = this.a.size() + this.b.size();
       }
 
       @Override
@@ -209,7 +209,7 @@ public class FingerTreeSeq<T> implements Seq<T> {
 
       @Override
       int size() {
-        return v;
+        return size;
       }
 
       @Override
@@ -246,13 +246,13 @@ public class FingerTreeSeq<T> implements Seq<T> {
       final Fragment<T> a;
       final Fragment<T> b;
       final Fragment<T> c;
-      final int v;
+      final int size;
 
       Three(Fragment<T> a, Fragment<T> b, Fragment<T> c) {
         this.a = a;
         this.b = b;
         this.c = c;
-        v = this.a.size() + this.b.size() + this.c.size();
+        size = this.a.size() + this.b.size() + this.c.size();
       }
 
       @Override
@@ -272,7 +272,7 @@ public class FingerTreeSeq<T> implements Seq<T> {
 
       @Override
       int size() {
-        return v;
+        return size;
       }
 
       @Override
@@ -318,14 +318,14 @@ public class FingerTreeSeq<T> implements Seq<T> {
       final Fragment<T> b;
       final Fragment<T> c;
       final Fragment<T> d;
-      final int v;
+      final int size;
 
       Four(Fragment<T> a, Fragment<T> b, Fragment<T> c, Fragment<T> d) {
         this.a = a;
         this.b = b;
         this.c = c;
         this.d = d;
-        v = this.a.size() + this.b.size() + this.c.size() + this.d.size();
+        size = this.a.size() + this.b.size() + this.c.size() + this.d.size();
       }
 
       @Override
@@ -351,7 +351,7 @@ public class FingerTreeSeq<T> implements Seq<T> {
 
       @Override
       int size() {
-        return v;
+        return size;
       }
 
       @Override
@@ -407,12 +407,12 @@ public class FingerTreeSeq<T> implements Seq<T> {
 
     static final class Node2<T> extends Node<T> {
       final Fragment<T> a, b;
-      final int v;
+      final int size;
 
       Node2(Fragment<T> a, Fragment<T> b) {
         this.a = a;
         this.b = b;
-        v = a.size() + b.size();
+        size = a.size() + b.size();
       }
 
       @Override
@@ -422,7 +422,7 @@ public class FingerTreeSeq<T> implements Seq<T> {
 
       @Override
       int size() {
-        return v;
+        return size;
       }
 
       @Override
@@ -457,13 +457,13 @@ public class FingerTreeSeq<T> implements Seq<T> {
 
     static final class Node3<T> extends Node<T> {
       final Fragment<T> a, b, c;
-      final int v;
+      final int size;
 
       Node3(Fragment<T> a, Fragment<T> b, Fragment<T> c) {
         this.a = a;
         this.b = b;
         this.c = c;
-        v = a.size() + b.size() + c.size();
+        size = a.size() + b.size() + c.size();
       }
 
       @Override
@@ -473,7 +473,7 @@ public class FingerTreeSeq<T> implements Seq<T> {
 
       @Override
       int size() {
-        return v;
+        return size;
       }
 
       @Override
@@ -610,66 +610,66 @@ public class FingerTreeSeq<T> implements Seq<T> {
     }
 
     static final class Deep<T> extends Item<T> {
-      final Digit<T> dl;
-      final Item<T> item;
-      final Digit<T> dr;
-      final int v;
+      final Digit<T> l;
+      final Item<T> m;
+      final Digit<T> r;
+      final int size;
 
-      Deep(Digit<T> dl, Item<T> item, Digit<T> dr) {
-        this.dl = dl;
-        this.item = item;
-        this.dr = dr;
-        v = this.dl.size() + this.item.size() + this.dr.size();
+      Deep(Digit<T> l, Item<T> m, Digit<T> r) {
+        this.l = l;
+        this.m = m;
+        this.r = r;
+        size = this.l.size() + this.m.size() + this.r.size();
       }
 
       @Override
       Item<T> cons(Fragment<T> v) {
-        return dl.cons(v, item, dr);
+        return l.cons(v, m, r);
       }
 
       @Override
       Deep<T> snoc(Fragment<T> v) {
-        return dr.snoc(dl, item, v);
+        return r.snoc(l, m, v);
       }
 
       @Override
       T head() {
-        return dl.head();
+        return l.head();
       }
 
       @Override
       int size() {
-        return v;
+        return size;
       }
 
       @Override
       T nth(int index) {
-        if (index < dl.size()) {
-          return dl.nth(index);
+        if (index < l.size()) {
+          return l.nth(index);
         }
-        index -= dl.size();
-        if (index < item.size()) {
-          return item.nth(index);
+        index -= l.size();
+        if (index < m.size()) {
+          return m.nth(index);
         }
-        index -= item.size();
-        if (index < dr.size()) {
-          return dr.nth(index);
+        index -= m.size();
+        if (index < r.size()) {
+          return r.nth(index);
         }
         throw new RangeException();
       }
 
       @Override
       Deep<T> nth(int index, T v) {
-        if (index < dl.size()) {
-          return new Deep<T>(dl.nth(index, v), item, dr);
+        if (index < l.size()) {
+          return new Deep<T>(l.nth(index, v), m, r);
         }
-        index -= dl.size();
-        if (index < item.size()) {
-          return new Deep<T>(dl, item.nth(index, v), dr);
+        index -= l.size();
+        if (index < m.size()) {
+          return new Deep<T>(l, m.nth(index, v), r);
         }
-        index -= item.size();
-        if (index < dr.size()) {
-          return new Deep<T>(dl, item, dr.nth(index, v));
+        index -= m.size();
+        if (index < r.size()) {
+          return new Deep<T>(l, m, r.nth(index, v));
         }
         throw new RangeException();
       }
@@ -750,11 +750,11 @@ public class FingerTreeSeq<T> implements Seq<T> {
     w.write(">");
     w.write("(\n");
     w.indent("   |");
-    deep.dl.print(w);
+    deep.l.print(w);
     w.write("\n");
-    deep.item.print(w);
+    deep.m.print(w);
     w.write("\n");
-    deep.dr.print(w);
+    deep.r.print(w);
     w.unindent();
     w.write("\n)");
   }
