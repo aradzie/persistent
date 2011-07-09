@@ -4,6 +4,17 @@ import debug.IndentingPrintWriter;
 import debug.Printable;
 
 public final class FingerTreeSeq<T> implements Seq<T> {
+  public interface Visitor<T> extends Seq.Visitor<T> {
+    @Override
+    void before(int size);
+
+    @Override
+    void visit(T v);
+
+    @Override
+    void after();
+  }
+
   private final Item<T> root;
 
   public FingerTreeSeq() {
@@ -12,6 +23,24 @@ public final class FingerTreeSeq<T> implements Seq<T> {
 
   private FingerTreeSeq(Item<T> that) {
     root = that;
+  }
+
+  @Override
+  public void accept(Seq.Visitor<T> visitor) {
+    if (visitor instanceof Visitor) {
+      accept((Visitor<T>) visitor);
+    }
+    else {
+      visitor.before(size());
+      root.accept(visitor);
+      visitor.after();
+    }
+  }
+
+  public void accept(Visitor<T> visitor) {
+    visitor.before(size());
+    root.accept(visitor);
+    visitor.after();
   }
 
   @Override
@@ -74,6 +103,8 @@ public final class FingerTreeSeq<T> implements Seq<T> {
   }
 
   private abstract static class Fragment<T> {
+    abstract void accept(Seq.Visitor<T> visitor);
+
     abstract T head();
 
     abstract int size();
@@ -88,6 +119,11 @@ public final class FingerTreeSeq<T> implements Seq<T> {
 
     Elem(T v) {
       this.v = v;
+    }
+
+    @Override
+    void accept(Seq.Visitor<T> visitor) {
+      visitor.visit(v);
     }
 
     @Override
@@ -150,6 +186,11 @@ public final class FingerTreeSeq<T> implements Seq<T> {
       }
 
       @Override
+      void accept(Seq.Visitor<T> visitor) {
+        a.accept(visitor);
+      }
+
+      @Override
       T head() {
         return a.head();
       }
@@ -200,6 +241,12 @@ public final class FingerTreeSeq<T> implements Seq<T> {
       @Override
       Item.Deep<T> snoc(Digit<T> digit, Item<T> item, Fragment<T> v) {
         return new Item.Deep<T>(digit, item, new Three<T>(a, b, v));
+      }
+
+      @Override
+      void accept(Seq.Visitor<T> visitor) {
+        a.accept(visitor);
+        b.accept(visitor);
       }
 
       @Override
@@ -263,6 +310,13 @@ public final class FingerTreeSeq<T> implements Seq<T> {
       @Override
       Item.Deep<T> snoc(Digit<T> digit, Item<T> item, Fragment<T> v) {
         return new Item.Deep<T>(digit, item, new Four<T>(a, b, c, v));
+      }
+
+      @Override
+      void accept(Seq.Visitor<T> visitor) {
+        a.accept(visitor);
+        b.accept(visitor);
+        c.accept(visitor);
       }
 
       @Override
@@ -345,6 +399,14 @@ public final class FingerTreeSeq<T> implements Seq<T> {
       }
 
       @Override
+      void accept(Seq.Visitor<T> visitor) {
+        a.accept(visitor);
+        b.accept(visitor);
+        c.accept(visitor);
+        d.accept(visitor);
+      }
+
+      @Override
       T head() {
         return a.head();
       }
@@ -416,6 +478,12 @@ public final class FingerTreeSeq<T> implements Seq<T> {
       }
 
       @Override
+      void accept(Seq.Visitor<T> visitor) {
+        a.accept(visitor);
+        b.accept(visitor);
+      }
+
+      @Override
       T head() {
         return a.head();
       }
@@ -464,6 +532,13 @@ public final class FingerTreeSeq<T> implements Seq<T> {
         this.b = b;
         this.c = c;
         size = a.size() + b.size() + c.size();
+      }
+
+      @Override
+      void accept(Seq.Visitor<T> visitor) {
+        a.accept(visitor);
+        b.accept(visitor);
+        c.accept(visitor);
       }
 
       @Override
@@ -535,6 +610,9 @@ public final class FingerTreeSeq<T> implements Seq<T> {
       }
 
       @Override
+      void accept(Seq.Visitor<T> tVisitor) {}
+
+      @Override
       T head() {
         throw new RangeException();
       }
@@ -584,6 +662,11 @@ public final class FingerTreeSeq<T> implements Seq<T> {
       }
 
       @Override
+      void accept(Seq.Visitor<T> visitor) {
+        f.accept(visitor);
+      }
+
+      @Override
       T head() {
         return f.head();
       }
@@ -630,6 +713,13 @@ public final class FingerTreeSeq<T> implements Seq<T> {
       @Override
       Deep<T> snoc(Fragment<T> v) {
         return r.snoc(l, m, v);
+      }
+
+      @Override
+      void accept(Seq.Visitor<T> visitor) {
+        l.accept(visitor);
+        m.accept(visitor);
+        r.accept(visitor);
       }
 
       @Override

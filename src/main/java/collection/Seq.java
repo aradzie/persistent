@@ -9,6 +9,22 @@ package collection;
  */
 public interface Seq<T> {
   /**
+   * A visitor to visit every list element once
+   * in order of consing.
+   *
+   * @param <T> Element type.
+   */
+  interface Visitor<T> {
+    void before(int size);
+
+    void visit(T v);
+
+    void after();
+  }
+
+  void accept(Visitor<T> visitor);
+
+  /**
    * Get the first element. The first element is the most
    * recently {@link #cons(Object) consed} one.
    *

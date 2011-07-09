@@ -12,6 +12,21 @@ package collection;
  * @param <T> Element type.
  */
 public final class ForestSeq<T> implements Seq<T> {
+  public interface Visitor<T> extends Seq.Visitor<T> {
+    @Override
+    void before(int size);
+
+    void enterTree(int size);
+
+    @Override
+    void visit(T v);
+
+    void exitTree();
+
+    @Override
+    void after();
+  }
+
   private final Tree<T> head;
 
   private ForestSeq(Tree<T> head) {
@@ -20,6 +35,24 @@ public final class ForestSeq<T> implements Seq<T> {
 
   public ForestSeq() {
     this(new Tree<T>());
+  }
+
+  @Override
+  public void accept(Seq.Visitor<T> visitor) {
+    if (visitor instanceof Visitor) {
+      accept((Visitor<T>) visitor);
+    }
+    else {
+      visitor.before(size());
+      head.accept(visitor);
+      visitor.after();
+    }
+  }
+
+  public void accept(Visitor<T> visitor) {
+    visitor.before(size());
+    head.accept(visitor);
+    visitor.after();
   }
 
   @Override
@@ -95,6 +128,22 @@ public final class ForestSeq<T> implements Seq<T> {
       this.seqSize = this.next.seqSize + this.size;
     }
 
+    void accept(Seq.Visitor<T> visitor) {
+      if (size > 0) {
+        root.accept(visitor);
+        next.accept(visitor);
+      }
+    }
+
+    void accept(Visitor<T> visitor) {
+      if (size > 0) {
+        visitor.enterTree(size);
+        root.accept(visitor);
+        visitor.exitTree();
+        next.accept(visitor);
+      }
+    }
+
     T head() {
       if (size == 0) {
         throw new RangeException();
@@ -157,6 +206,17 @@ public final class ForestSeq<T> implements Seq<T> {
       this.v = v;
       this.l = l;
       this.r = r;
+    }
+
+    void accept(Seq.Visitor<T> visitor) {
+      // Pre-order traversal.
+      visitor.visit(v);
+      if (l != null) {
+        l.accept(visitor);
+      }
+      if (r != null) {
+        r.accept(visitor);
+      }
     }
 
     T nth(int size, int index) {
