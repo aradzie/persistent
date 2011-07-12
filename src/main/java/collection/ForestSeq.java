@@ -6,7 +6,7 @@ package collection;
  * Functional Random-Access Lists</a> by Chris Okasaki.
  * <p/>
  * Please note that ForestSeq is not the official name of this data structure, it is
- * an informal name given by the implementer. It was going to be simple and concise
+ * an informal name given by the implementer. It intended to be simple and concise
  * name that is easy to remember and type.
  *
  * @param <T> Element type.
