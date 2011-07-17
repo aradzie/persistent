@@ -2,6 +2,9 @@ package collection;
 
 import org.junit.Test;
 
+import java.util.Arrays;
+import java.util.HashSet;
+
 import static org.junit.Assert.*;
 
 public class HashTreeMapTest {
@@ -12,6 +15,7 @@ public class HashTreeMapTest {
     assertNull(map.get(1));
     assertNull(map.get(2));
     assertNull(map.get(3));
+    assertFalse(map.iterator().hasNext());
     map = map.put(1, "one");
     map = map.put(2, "two");
     map = map.put(3, "three");
@@ -19,21 +23,29 @@ public class HashTreeMapTest {
     assertEquals("one", map.get(1));
     assertEquals("two", map.get(2));
     assertEquals("three", map.get(3));
+    assertEqualKeys(map, 1, 2, 3);
+    assertEqualValues(map, "one", "two", "three");
     map = map.put(1, "ONE");
     assertNull(map.get(0));
     assertEquals("ONE", map.get(1));
     assertEquals("two", map.get(2));
     assertEquals("three", map.get(3));
+    assertEqualKeys(map, 1, 2, 3);
+    assertEqualValues(map, "ONE", "two", "three");
     map = map.put(2, "TWO");
     assertNull(map.get(0));
     assertEquals("ONE", map.get(1));
     assertEquals("TWO", map.get(2));
     assertEquals("three", map.get(3));
+    assertEqualKeys(map, 1, 2, 3);
+    assertEqualValues(map, "ONE", "TWO", "three");
     map = map.put(3, "THREE");
     assertNull(map.get(0));
     assertEquals("ONE", map.get(1));
     assertEquals("TWO", map.get(2));
     assertEquals("THREE", map.get(3));
+    assertEqualKeys(map, 1, 2, 3);
+    assertEqualValues(map, "ONE", "TWO", "THREE");
     map = map.remove(1);
     map = map.remove(2);
     map = map.remove(3);
@@ -41,6 +53,7 @@ public class HashTreeMapTest {
     assertNull(map.get(1));
     assertNull(map.get(2));
     assertNull(map.get(3));
+    assertFalse(map.iterator().hasNext());
   }
 
   @Test
@@ -82,31 +95,62 @@ public class HashTreeMapTest {
       }
     }
 
+    Key a = new Key("a");
+    Key b = new Key("b");
+    Key c = new Key("c");
+
     HashTreeMap<Key, String> map = new HashTreeMap<Key, String>()
-        .put(new Key("a"), "a")
-        .put(new Key("b"), "b")
-        .put(new Key("c"), "c");
+        .put(a, "a").put(b, "b").put(c, "c");
 
-    assertEquals("a", map.get(new Key("a")));
-    assertEquals("b", map.get(new Key("b")));
-    assertEquals("c", map.get(new Key("c")));
+    assertEquals("a", map.get(a));
+    assertEquals("b", map.get(b));
+    assertEquals("c", map.get(c));
 
-    map = map.remove(new Key("a"));
+    assertEqualKeys(map, a, b, c);
+    assertEqualValues(map, "a", "b", "c");
 
-    assertNull(map.get(new Key("a")));
-    assertEquals("b", map.get(new Key("b")));
-    assertEquals("c", map.get(new Key("c")));
+    map = map.remove(a);
 
-    map = map.remove(new Key("b"));
+    assertNull(map.get(a));
+    assertEquals("b", map.get(b));
+    assertEquals("c", map.get(c));
 
-    assertNull(map.get(new Key("a")));
-    assertNull(map.get(new Key("b")));
-    assertEquals("c", map.get(new Key("c")));
+    assertEqualKeys(map, b, c);
+    assertEqualValues(map, "b", "c");
 
-    map = map.remove(new Key("c"));
+    map = map.remove(b);
 
-    assertNull(map.get(new Key("a")));
-    assertNull(map.get(new Key("b")));
-    assertNull(map.get(new Key("c")));
+    assertNull(map.get(a));
+    assertNull(map.get(b));
+    assertEquals("c", map.get(c));
+
+    assertEqualKeys(map, c);
+    assertEqualValues(map, "c");
+
+    map = map.remove(c);
+
+    assertNull(map.get(a));
+    assertNull(map.get(b));
+    assertNull(map.get(c));
+
+    assertFalse(map.iterator().hasNext());
+  }
+
+  static <K, V> void assertEqualKeys(Map<K, V> map, K... keys) {
+    HashSet<K> expected = new HashSet<K>(Arrays.asList(keys));
+    HashSet<K> actual = new HashSet<K>();
+    for (Map.Entry<K, V> entry : map) {
+      actual.add(entry.getKey());
+    }
+    assertEquals(expected, actual);
+  }
+
+  static <K, V> void assertEqualValues(Map<K, V> map, V... values) {
+    HashSet<V> expected = new HashSet<V>(Arrays.asList(values));
+    HashSet<V> actual = new HashSet<V>();
+    for (Map.Entry<K, V> entry : map) {
+      actual.add(entry.getValue());
+    }
+    assertEquals(expected, actual);
   }
 }

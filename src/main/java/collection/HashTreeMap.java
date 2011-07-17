@@ -1,5 +1,8 @@
 package collection;
 
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+
 /**
  * A persistent map based on the data structure as described
  * in the publication <em>Ideal Hash Trees</em> by <em>Phil Bagwell</em>.
@@ -7,7 +10,7 @@ package collection;
  * @param <K> Key type.
  * @param <V> Value type.
  */
-public class HashTreeMap<K, V> implements Map<K, V> {
+public class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
   private static final int MASK_WIDTH = 5;
   private static final int MASK = 31;
   private final Tree<K, V> root;
@@ -63,50 +66,9 @@ public class HashTreeMap<K, V> implements Map<K, V> {
     }
   }
 
-  private abstract static class Item<K, V> {
-    V find(int hashCode, K key, int prefix) {
-      return null;
-    }
-  }
-
-  private static final class Entry<K, V> extends Item<K, V> {
-    final int hashCode;
-    final K key;
-    final V value;
-    final Entry<K, V> next;
-
-    Entry(int hashCode, K key, V value, Entry<K, V> next) {
-      this.hashCode = hashCode;
-      this.key = key;
-      this.value = value;
-      this.next = next;
-    }
-
-    static <K, V> V find(Entry<K, V> entry, int hashCode, K key) {
-      while (entry != null) {
-        if (entry.hashCode == hashCode && entry.key.equals(key)) {
-          return entry.value;
-        }
-        entry = entry.next;
-      }
-      return null;
-    }
-
-    Entry<K, V> remove(int hashCode, K key) {
-      if (this.hashCode == hashCode && this.key.equals(key)) {
-        return next;
-      }
-      if (next == null) {
-        return this;
-      }
-      else {
-        Entry<K, V> result = next.remove(hashCode, key);
-        if (next != result) {
-          return new Entry<K, V>(this.hashCode, this.key, this.value, result);
-        }
-        return this;
-      }
-    }
+  @Override
+  public Iterator<Map.Entry<K, V>> iterator() {
+    return new It<K, V>(root);
   }
 
   private static final class Tree<K, V> extends Item<K, V> {
@@ -292,6 +254,117 @@ public class HashTreeMap<K, V> implements Map<K, V> {
 
     static int shift(int mask, int prefix) {
       return Integer.bitCount(mask & ((1 << (prefix & MASK)) - 1));
+    }
+  }
+
+  private static class It<K, V> implements Iterator<Map.Entry<K, V>> {
+    abstract static class Stack<K, V> {
+      final Stack<K, V> next;
+
+      Stack(Stack<K, V> next) {
+        this.next = next;
+      }
+
+      abstract boolean hasNext();
+
+      abstract Item<K, V> next();
+    }
+
+    static class NodeLevel<K, V> extends Stack<K, V> {
+      final Item<K, V>[] items;
+      int index;
+
+      NodeLevel(Stack<K, V> next, Tree<K, V> tree) {
+        super(next);
+        items = tree.items;
+      }
+
+      @Override
+      boolean hasNext() {
+        return index < items.length;
+      }
+
+      @Override
+      Item<K, V> next() {
+        if (!hasNext()) {
+          throw new IllegalStateException();
+        }
+        return items[index++];
+      }
+    }
+
+    static class EntryLevel<K, V> extends Stack<K, V> {
+      Entry<K, V> entry;
+
+      EntryLevel(Stack<K, V> next, Entry<K, V> entry) {
+        super(next);
+        this.entry = entry;
+      }
+
+      @Override
+      boolean hasNext() {
+        return entry != null;
+      }
+
+      @Override
+      Item<K, V> next() {
+        if (!hasNext()) {
+          throw new IllegalStateException();
+        }
+        Entry<K, V> current = entry;
+        entry = entry.next;
+        return current;
+      }
+    }
+
+    Stack<K, V> stack;
+
+    It(Tree<K, V> root) {
+      if (root.items.length > 0) {
+        stack = new NodeLevel<K, V>(null, root);
+      }
+    }
+
+    @Override
+    public boolean hasNext() {
+      return stack != null;
+    }
+
+    @Override
+    public Map.Entry<K, V> next() {
+      while (true) {
+        if (!hasNext()) {
+          throw new NoSuchElementException();
+        }
+        if (stack.hasNext()) {
+          Item<K, V> item = stack.next();
+          if (item instanceof Entry<?, ?>) {
+            Entry<K, V> entry = (Entry<K, V>) item;
+            if (stack instanceof EntryLevel<?, ?>
+                || entry.next == null) {
+              while (stack != null) {
+                if (stack.hasNext()) {
+                  break;
+                }
+                stack = stack.next;
+              }
+              return entry;
+            }
+            stack = new EntryLevel<K, V>(stack, (Entry<K, V>) item);
+          }
+          else {
+            stack = new NodeLevel<K, V>(stack, (Tree<K, V>) item);
+          }
+        }
+        else {
+          stack = stack.next;
+        }
+      }
+    }
+
+    @Override
+    public void remove() {
+      throw new UnsupportedOperationException();
     }
   }
 }
