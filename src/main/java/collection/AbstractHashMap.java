@@ -1,8 +1,19 @@
 package collection;
 
 abstract class AbstractHashMap<K, V> implements Map<K, V> {
+  protected static int keyHashCode(Object key) {
+    if (key == null) {
+      return 0;
+    }
+    return key.hashCode();
+  }
+
+  protected static boolean keysEqual(Object a, Object b) {
+    return a == b || a != null && b != null && a.equals(b);
+  }
+
   protected abstract static class Item<K, V> {
-    V find(int hashCode, K key, int prefix) {
+    V find(int hashCode, K key, int level) {
       return null;
     }
   }
@@ -33,7 +44,7 @@ abstract class AbstractHashMap<K, V> implements Map<K, V> {
 
     static <K, V> V find(Entry<K, V> entry, int hashCode, K key) {
       while (entry != null) {
-        if (entry.hashCode == hashCode && entry.key.equals(key)) {
+        if (entry.hashCode == hashCode && keysEqual(entry.key, key)) {
           return entry.value;
         }
         entry = entry.next;
@@ -42,7 +53,7 @@ abstract class AbstractHashMap<K, V> implements Map<K, V> {
     }
 
     Entry<K, V> remove(int hashCode, K key) {
-      if (this.hashCode == hashCode && this.key.equals(key)) {
+      if (this.hashCode == hashCode && keysEqual(this.key, key)) {
         return next;
       }
       if (next == null) {

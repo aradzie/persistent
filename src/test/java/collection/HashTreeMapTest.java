@@ -9,6 +9,22 @@ import static org.junit.Assert.*;
 
 public class HashTreeMapTest {
   @Test
+  public void nullKey() {
+    HashTreeMap<String, String> map = new HashTreeMap<String, String>();
+
+    assertNull(map.get(null));
+
+    map = map.put(null, "null");
+    assertEquals("null", map.get(null));
+
+    map = map.put(null, "haha");
+    assertEquals("haha", map.get(null));
+
+    map = map.remove(null);
+    assertNull(map.get(null));
+  }
+
+  @Test
   public void small() {
     HashTreeMap<Integer, String> map = new HashTreeMap<Integer, String>();
 

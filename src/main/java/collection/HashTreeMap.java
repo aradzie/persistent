@@ -28,20 +28,12 @@ public final class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
 
   @Override
   public V get(K key) {
-    if (key == null) {
-      throw new NullPointerException();
-    }
-    int hashCode = key.hashCode();
-    return root.find(hashCode, key, hashCode);
+    return root.find(keyHashCode(key), key, 0);
   }
 
   @Override
   public HashTreeMap<K, V> put(K key, V value) {
-    if (key == null) {
-      throw new NullPointerException();
-    }
-    int hashCode = key.hashCode();
-    Tree<K, V> result = root.insert(hashCode, key, value, 0);
+    Tree<K, V> result = root.insert(keyHashCode(key), key, value, 0);
     if (root == result) {
       return this;
     }
@@ -50,11 +42,7 @@ public final class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
 
   @Override
   public HashTreeMap<K, V> remove(K key) {
-    if (key == null) {
-      throw new NullPointerException();
-    }
-    int hashCode = key.hashCode();
-    Tree<K, V> result = root.remove(hashCode, key, 0);
+    Tree<K, V> result = root.remove(keyHashCode(key), key, 0);
     if (root == result) {
       return this;
     }
@@ -150,11 +138,12 @@ public final class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
     }
 
     @Override
-    V find(int hashCode, K key, int prefix) {
+    V find(int hashCode, K key, int level) {
+      int prefix = (hashCode >>> (level * MASK_WIDTH)) & MASK;
       Item<K, V> item = item(prefix);
       if (item instanceof Tree) {
         Tree<K, V> tree = (Tree<K, V>) item;
-        return tree.find(hashCode, key, prefix >>> MASK_WIDTH);
+        return tree.find(hashCode, key, level + 1);
       }
       return Entry.find((Entry<K, V>) item, hashCode, key);
     }
