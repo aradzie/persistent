@@ -7,6 +7,8 @@ public interface Map<K, V> extends Iterable<Map.Entry<K, V>> {
 
   Map<K, V> remove(K key);
 
+  int size();
+
   interface Entry<K, V> {
     K getKey();
 

@@ -16,18 +16,22 @@ public class HashTreeMapTest {
 
     map = map.put(null, "null");
     assertEquals("null", map.get(null));
+    assertEquals(1, map.size());
 
     map = map.put(null, "haha");
     assertEquals("haha", map.get(null));
+    assertEquals(1, map.size());
 
     map = map.remove(null);
     assertNull(map.get(null));
+    assertEquals(0, map.size());
   }
 
   @Test
   public void small() {
     HashTreeMap<Integer, String> map = new HashTreeMap<Integer, String>();
 
+    assertEquals(0, map.size());
     assertNull(map.get(0));
     assertNull(map.get(1));
     assertNull(map.get(2));
@@ -37,6 +41,7 @@ public class HashTreeMapTest {
     map = map.put(1, "one");
     map = map.put(2, "two");
     map = map.put(3, "three");
+    assertEquals(3, map.size());
     assertNull(map.get(0));
     assertEquals("one", map.get(1));
     assertEquals("two", map.get(2));
@@ -45,6 +50,7 @@ public class HashTreeMapTest {
     assertEqualValues(map, "one", "two", "three");
 
     map = map.put(1, "ONE");
+    assertEquals(3, map.size());
     assertNull(map.get(0));
     assertEquals("ONE", map.get(1));
     assertEquals("two", map.get(2));
@@ -53,6 +59,7 @@ public class HashTreeMapTest {
     assertEqualValues(map, "ONE", "two", "three");
 
     map = map.put(2, "TWO");
+    assertEquals(3, map.size());
     assertNull(map.get(0));
     assertEquals("ONE", map.get(1));
     assertEquals("TWO", map.get(2));
@@ -61,6 +68,7 @@ public class HashTreeMapTest {
     assertEqualValues(map, "ONE", "TWO", "three");
 
     map = map.put(3, "THREE");
+    assertEquals(3, map.size());
     assertNull(map.get(0));
     assertEquals("ONE", map.get(1));
     assertEquals("TWO", map.get(2));
@@ -71,6 +79,7 @@ public class HashTreeMapTest {
     map = map.remove(1);
     map = map.remove(2);
     map = map.remove(3);
+    assertEquals(0, map.size());
     assertNull(map.get(0));
     assertNull(map.get(1));
     assertNull(map.get(2));
@@ -139,6 +148,8 @@ public class HashTreeMapTest {
     HashTreeMap<Key, String> map = new HashTreeMap<Key, String>()
         .put(a, "a").put(b, "b").put(c, "c");
 
+    assertEquals(3, map.size());
+
     assertEquals("a", map.get(a));
     assertEquals("b", map.get(b));
     assertEquals("c", map.get(c));
@@ -147,6 +158,8 @@ public class HashTreeMapTest {
     assertEqualValues(map, "a", "b", "c");
 
     map = map.remove(a);
+
+    assertEquals(2, map.size());
 
     assertNull(map.get(a));
     assertEquals("b", map.get(b));
@@ -157,6 +170,8 @@ public class HashTreeMapTest {
 
     map = map.remove(b);
 
+    assertEquals(1, map.size());
+
     assertNull(map.get(a));
     assertNull(map.get(b));
     assertEquals("c", map.get(c));
@@ -165,6 +180,8 @@ public class HashTreeMapTest {
     assertEqualValues(map, "c");
 
     map = map.remove(c);
+
+    assertEquals(0, map.size());
 
     assertNull(map.get(a));
     assertNull(map.get(b));
