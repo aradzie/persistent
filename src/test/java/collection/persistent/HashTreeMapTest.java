@@ -28,7 +28,7 @@ public class HashTreeMapTest {
   }
 
   @Test
-  public void small() {
+  public void smallMap() {
     HashTreeMap<Integer, String> map = new HashTreeMap<Integer, String>();
 
     assertEquals(0, map.size());
@@ -88,7 +88,7 @@ public class HashTreeMapTest {
   }
 
   @Test
-  public void large() {
+  public void largeMap() {
     HashTreeMap<String, String> map = new HashTreeMap<String, String>();
 
     for (int n = 0; n < 100000; n++) {
@@ -123,9 +123,11 @@ public class HashTreeMapTest {
   public void collisions() {
     class Key {
       final String key;
+      final int hashCode;
 
-      Key(String key) {
+      Key(String key, int hashCode) {
         this.key = key;
+        this.hashCode = hashCode;
       }
 
       @Override
@@ -137,13 +139,18 @@ public class HashTreeMapTest {
 
       @Override
       public int hashCode() {
-        return Integer.MAX_VALUE; // Eat it!
+        return hashCode;
+      }
+
+      @Override
+      public String toString() {
+        return "{key='" + key + "\'; hashCode=" + hashCode + "}";
       }
     }
 
-    Key a = new Key("a");
-    Key b = new Key("b");
-    Key c = new Key("c");
+    Key a = new Key("a", 0);
+    Key b = new Key("b", 0);
+    Key c = new Key("c", 32);
 
     HashTreeMap<Key, String> map = new HashTreeMap<Key, String>()
         .put(a, "a").put(b, "b").put(c, "c");
