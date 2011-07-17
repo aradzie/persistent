@@ -81,12 +81,13 @@ public class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
     }
 
     Tree(Tree<K, V> that, Item<K, V> entry, int index) {
+      int bit = 1 << (index & MASK);
       if (entry != null) {
         if ((that.mask & (1 << index)) == 0) {
           // insert new entry into node
           mask = that.mask | (1 << index);
           items = new Item[Integer.bitCount(mask)];
-          int shift = shift(index);
+          int shift = shift(bit);
           for (int n = 0; n < items.length; n++) {
             if (n < shift) {
               items[n] = that.items[n];
@@ -103,7 +104,7 @@ public class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
           // replace existing entry in node
           mask = that.mask;
           items = new Item[Integer.bitCount(mask)];
-          int shift = shift(index);
+          int shift = shift(bit);
           for (int n = 0; n < items.length; n++) {
             if (n == shift) {
               items[n] = entry;
@@ -118,7 +119,7 @@ public class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
         // remove entry from node
         mask = that.mask & ~(1 << index);
         items = new Item[Integer.bitCount(mask)];
-        int shift = shift(index);
+        int shift = shift(bit);
         for (int n = 0; n < items.length; n++) {
           if (n < shift) {
             items[n] = that.items[n];
@@ -240,20 +241,16 @@ public class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
       return new Tree<K, V>(tree, item, index);
     }
 
-    Item<K, V> item(int index) {
-      int shift = shift(index);
-      if (shift < items.length) {
-        return items[shift];
+    Item<K, V> item(int prefix) {
+      int bit = 1 << (prefix & MASK);
+      if ((mask & bit) == 0) {
+        return null;
       }
-      return null;
+      return items[shift(bit)];
     }
 
-    int shift(int prefix) {
-      return shift(mask, prefix);
-    }
-
-    static int shift(int mask, int prefix) {
-      return Integer.bitCount(mask & ((1 << (prefix & MASK)) - 1));
+    int shift(int bit) {
+      return Integer.bitCount(mask & (bit - 1));
     }
   }
 

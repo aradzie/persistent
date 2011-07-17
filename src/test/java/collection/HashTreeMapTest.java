@@ -11,11 +11,13 @@ public class HashTreeMapTest {
   @Test
   public void small() {
     HashTreeMap<Integer, String> map = new HashTreeMap<Integer, String>();
+
     assertNull(map.get(0));
     assertNull(map.get(1));
     assertNull(map.get(2));
     assertNull(map.get(3));
     assertFalse(map.iterator().hasNext());
+
     map = map.put(1, "one");
     map = map.put(2, "two");
     map = map.put(3, "three");
@@ -25,6 +27,7 @@ public class HashTreeMapTest {
     assertEquals("three", map.get(3));
     assertEqualKeys(map, 1, 2, 3);
     assertEqualValues(map, "one", "two", "three");
+
     map = map.put(1, "ONE");
     assertNull(map.get(0));
     assertEquals("ONE", map.get(1));
@@ -32,6 +35,7 @@ public class HashTreeMapTest {
     assertEquals("three", map.get(3));
     assertEqualKeys(map, 1, 2, 3);
     assertEqualValues(map, "ONE", "two", "three");
+
     map = map.put(2, "TWO");
     assertNull(map.get(0));
     assertEquals("ONE", map.get(1));
@@ -39,6 +43,7 @@ public class HashTreeMapTest {
     assertEquals("three", map.get(3));
     assertEqualKeys(map, 1, 2, 3);
     assertEqualValues(map, "ONE", "TWO", "three");
+
     map = map.put(3, "THREE");
     assertNull(map.get(0));
     assertEquals("ONE", map.get(1));
@@ -46,6 +51,7 @@ public class HashTreeMapTest {
     assertEquals("THREE", map.get(3));
     assertEqualKeys(map, 1, 2, 3);
     assertEqualValues(map, "ONE", "TWO", "THREE");
+
     map = map.remove(1);
     map = map.remove(2);
     map = map.remove(3);
@@ -59,15 +65,30 @@ public class HashTreeMapTest {
   @Test
   public void large() {
     HashTreeMap<String, String> map = new HashTreeMap<String, String>();
+
     for (int n = 0; n < 100000; n++) {
       map = map.put(Integer.toString(n, 8), Integer.toString(n, 16));
     }
+
     for (int n = 0; n < 100000; n++) {
       assertEquals(Integer.toString(n, 16), map.get(Integer.toString(n, 8)));
     }
+
+    int count = 0;
+    for (Map.Entry<String, String> entry : map) {
+      assertEquals(
+          Integer.valueOf(entry.getKey(), 8),
+          Integer.valueOf(entry.getValue(), 16));
+      count++;
+    }
+    assertEquals(100000, count);
+
     for (int n = 0; n < 100000; n++) {
       map = map.remove(Integer.toString(n, 8));
     }
+
+    assertFalse(map.iterator().hasNext());
+
     for (int n = 0; n < 100000; n++) {
       assertNull(map.get(Integer.toString(n, 8)));
     }
