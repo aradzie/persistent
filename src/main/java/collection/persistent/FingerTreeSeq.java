@@ -13,17 +13,6 @@ import debug.Printable;
  * @param <T> Element type.
  */
 public final class FingerTreeSeq<T> implements Seq<T> {
-  public interface Visitor<T> extends Seq.Visitor<T> {
-    @Override
-    void before(int size);
-
-    @Override
-    void visit(T v);
-
-    @Override
-    void after();
-  }
-
   private final Tree<T> root;
 
   public FingerTreeSeq() {
@@ -88,17 +77,6 @@ public final class FingerTreeSeq<T> implements Seq<T> {
   }
 
   @Override
-  public void accept(Seq.Visitor<T> visitor) {
-    if (visitor instanceof Visitor) {
-      accept((Visitor<T>) visitor);
-    }
-    else {
-      visitor.before(size());
-      root.accept(visitor);
-      visitor.after();
-    }
-  }
-
   public void accept(Visitor<T> visitor) {
     visitor.before(size());
     root.accept(visitor);

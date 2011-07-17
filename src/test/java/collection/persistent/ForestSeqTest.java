@@ -26,7 +26,6 @@ public class ForestSeqTest {
         assertEquals(n - m, (int) t.get(m));
       }
     }
-    t.accept(new Print());
   }
 
   @Test
@@ -69,44 +68,5 @@ public class ForestSeqTest {
 
     @Override
     public void after() {}
-  }
-
-  class Print implements ForestSeq.Visitor<Integer> {
-    int n;
-
-    @Override
-    public void before(int size) {
-      System.out.println("List(" + size + ")={");
-    }
-
-    @Override
-    public void enterTree(int size) {
-      System.out.print("  Tree(" + size + ")={");
-      n = 0;
-    }
-
-    @Override
-    public void visit(Integer v) {
-      if (n < 10) {
-        if (n > 0) {
-          System.out.print(", ");
-        }
-        System.out.print(v);
-      }
-      else if (n == 10) {
-        System.out.print(", ...");
-      }
-      n++;
-    }
-
-    @Override
-    public void exitTree() {
-      System.out.println("}");
-    }
-
-    @Override
-    public void after() {
-      System.out.println("}");
-    }
   }
 }
