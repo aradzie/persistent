@@ -69,18 +69,17 @@ public final class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
     }
 
     Tree(Tree<K, V> that, Item<K, V> entry, int index) {
-      int bit = 1 << index;
       if (entry != null) {
         if ((that.mask & (1 << index)) == 0) {
           // Insert new entry into node.
           mask = that.mask | (1 << index);
           items = new Item[Integer.bitCount(mask)];
-          int shift = shift(bit);
+          int offset = offset(1 << index);
           for (int n = 0; n < items.length; n++) {
-            if (n < shift) {
+            if (n < offset) {
               items[n] = that.items[n];
             }
-            else if (n == shift) {
+            else if (n == offset) {
               items[n] = entry;
             }
             else {
@@ -92,9 +91,9 @@ public final class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
           // Replace existing entry in node.
           mask = that.mask;
           items = new Item[Integer.bitCount(mask)];
-          int shift = shift(bit);
+          int offset = offset(1 << index);
           for (int n = 0; n < items.length; n++) {
-            if (n == shift) {
+            if (n == offset) {
               items[n] = entry;
             }
             else {
@@ -107,9 +106,9 @@ public final class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
         // Remove entry from node.
         mask = that.mask & ~(1 << index);
         items = new Item[Integer.bitCount(mask)];
-        int shift = shift(bit);
+        int offset = offset(1 << index);
         for (int n = 0; n < items.length; n++) {
-          if (n < shift) {
+          if (n < offset) {
             items[n] = that.items[n];
           }
           else {
@@ -191,31 +190,23 @@ public final class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
       if (item == null) {
         return this;
       }
+      Item<K, V> result;
       if (item instanceof Tree) {
-        Tree<K, V> tree = (Tree<K, V>) item;
-        Tree<K, V> result = tree.remove(hashCode, key, level + 1);
-        if (tree != result) {
-          return compact(this, result, prefix);
-        }
+        result = ((Tree<K, V>) item).remove(hashCode, key, level + 1);
+      }
+      else {
+        result = ((Entry<K, V>) item).remove(hashCode, key);
+      }
+      if (item == result) {
         return this;
       }
-      Entry<K, V> entry = (Entry<K, V>) item;
-      Entry<K, V> result = entry.remove(hashCode, key);
-      if (entry != result) {
-        return compact(this, result, prefix);
-      }
-      return this;
-    }
-
-    static <K, V> Tree<K, V> compact(Tree<K, V> tree, Item<K, V> item, int index) {
-      if (item == null) {
-        int mask = tree.mask & ~(1 << index);
-        if (mask == 0) {
-          return null;
+      if (result == null) {
+        if ((mask & ~(1 << prefix)) == 0) {
+          return null; // Removed last entry from this tree.
         }
         // TODO contract tables with only one entry
       }
-      return new Tree<K, V>(tree, item, index);
+      return new Tree<K, V>(this, result, prefix);
     }
 
     Item<K, V> item(int prefix) {
@@ -223,10 +214,10 @@ public final class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
       if ((mask & bit) == 0) {
         return null;
       }
-      return items[shift(bit)];
+      return items[offset(bit)];
     }
 
-    int shift(int bit) {
+    int offset(int bit) {
       return Integer.bitCount(mask & (bit - 1));
     }
   }
