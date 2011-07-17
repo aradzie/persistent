@@ -86,5 +86,10 @@ abstract class AbstractHashMap<K, V> implements Map<K, V> {
       result = 31 * result + value.hashCode();
       return result;
     }
+
+    @Override
+    public String toString() {
+      return "key=" + key + "; value=" + value;
+    }
   }
 }
