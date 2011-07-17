@@ -10,7 +10,7 @@ import java.util.NoSuchElementException;
  * @param <K> Key type.
  * @param <V> Value type.
  */
-public class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
+public final class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
   private static final int MASK_WIDTH = 5;
   private static final int MASK = 31;
   private final Tree<K, V> root;
@@ -41,7 +41,7 @@ public class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
       throw new NullPointerException();
     }
     int hashCode = key.hashCode();
-    Tree<K, V> result = root.insert(hashCode, key, value, hashCode, 0);
+    Tree<K, V> result = root.insert(hashCode, key, value, 0);
     if (root == result) {
       return this;
     }
@@ -54,7 +54,7 @@ public class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
       throw new NullPointerException();
     }
     int hashCode = key.hashCode();
-    Tree<K, V> result = root.remove(hashCode, key, hashCode);
+    Tree<K, V> result = root.remove(hashCode, key, 0);
     if (root == result) {
       return this;
     }
@@ -81,10 +81,10 @@ public class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
     }
 
     Tree(Tree<K, V> that, Item<K, V> entry, int index) {
-      int bit = 1 << (index & MASK);
+      int bit = 1 << index;
       if (entry != null) {
         if ((that.mask & (1 << index)) == 0) {
-          // insert new entry into node
+          // Insert new entry into node.
           mask = that.mask | (1 << index);
           items = new Item[Integer.bitCount(mask)];
           int shift = shift(bit);
@@ -101,7 +101,7 @@ public class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
           }
         }
         else {
-          // replace existing entry in node
+          // Replace existing entry in node.
           mask = that.mask;
           items = new Item[Integer.bitCount(mask)];
           int shift = shift(bit);
@@ -116,7 +116,7 @@ public class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
         }
       }
       else {
-        // remove entry from node
+        // Remove entry from node.
         mask = that.mask & ~(1 << index);
         items = new Item[Integer.bitCount(mask)];
         int shift = shift(bit);
@@ -131,41 +131,20 @@ public class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
       }
     }
 
-    Tree(int hashCode1, K key1, V value1,
-         int hashCode2, K key2, V value2,
-         int level) {
-      int index1 = (hashCode1 >>> (MASK_WIDTH * level)) & MASK;
-      int index2 = (hashCode2 >>> (MASK_WIDTH * level)) & MASK;
+    Tree(Entry<K, V> e1, Entry<K, V> e2, int level) {
+      int index1 = (e1.hashCode >>> (MASK_WIDTH * level)) & MASK;
+      int index2 = (e2.hashCode >>> (MASK_WIDTH * level)) & MASK;
       if (index1 == index2) {
         mask = 1 << index1;
-        if (level < 5) {
-          items = new Item[]{
-              new Tree<K, V>(hashCode1, key1, value1,
-                  hashCode2, key2, value2,
-                  level + 1)
-          };
-        }
-        else {
-          items = new Item[]{
-              new Entry<K, V>(hashCode1, key1, value1,
-                  new Entry<K, V>(hashCode2, key2, value2,
-                      null))
-          };
-        }
+        items = new Item[]{new Tree<K, V>(e1, e2, level + 1)};
       }
       else {
         mask = (1 << index1) | (1 << index2);
         if (index1 < index2) {
-          items = new Item[]{
-              new Entry<K, V>(hashCode1, key1, value1, null),
-              new Entry<K, V>(hashCode2, key2, value2, null),
-          };
+          items = new Item[]{e1, e2};
         }
         else {
-          items = new Item[]{
-              new Entry<K, V>(hashCode2, key2, value2, null),
-              new Entry<K, V>(hashCode1, key1, value1, null),
-          };
+          items = new Item[]{e2, e1};
         }
       }
     }
@@ -180,52 +159,61 @@ public class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
       return Entry.find((Entry<K, V>) item, hashCode, key);
     }
 
-    Tree<K, V> insert(int hashCode, K key, V value, int prefix, int level) {
+    Tree<K, V> insert(int hashCode, K key, V value, int level) {
+      int prefix = (hashCode >>> (level * MASK_WIDTH)) & MASK;
       Item<K, V> item = item(prefix);
       if (item == null) {
+        // The slot is empty, put new entry in it.
         item = new Entry<K, V>(hashCode, key, value, null);
       }
       else if (item instanceof Tree) {
-        item = ((Tree<K, V>) item).insert(
-            hashCode, key, value, prefix >>> MASK_WIDTH, level + 1);
+        // The slot is occupied by a subtree, let it handle insertion.
+        item = ((Tree<K, V>) item).insert(hashCode, key, value, level + 1);
       }
       else {
+        // The slot is filled with an entry, either create a subtree
+        // or resolve collision.
         Entry<K, V> entry = (Entry<K, V>) item;
         Entry<K, V> result = entry.remove(hashCode, key);
         if (entry != result) {
+          // Simply replace entry with the same key.
           item = new Entry<K, V>(hashCode, key, value, result);
         }
         else {
-          if (level < 5) {
-            item = new Tree<K, V>(hashCode, key, value,
-                entry.hashCode, entry.key, entry.value,
-                level + 1);
+          // Prefixes of both current and new entry are equal so far.
+          if (hashCode == entry.hashCode) {
+            // The suffixes are also equal, so this is a collision.
+            item = new Entry<K, V>(hashCode, key, value, entry);
           }
           else {
-            item = new Entry<K, V>(hashCode, key, value, entry);
+            // The suffixes are different, create a subtree
+            // to hold both entries.
+            item = new Tree<K, V>(entry,
+                new Entry<K, V>(hashCode, key, value, null), level + 1);
           }
         }
       }
-      return new Tree<K, V>(this, item, prefix & MASK);
+      return new Tree<K, V>(this, item, prefix);
     }
 
-    Tree<K, V> remove(int hashCode, K key, int prefix) {
+    Tree<K, V> remove(int hashCode, K key, int level) {
+      int prefix = (hashCode >>> (level * MASK_WIDTH)) & MASK;
       Item<K, V> item = item(prefix);
       if (item == null) {
         return this;
       }
       if (item instanceof Tree) {
         Tree<K, V> tree = (Tree<K, V>) item;
-        Tree<K, V> result = tree.remove(hashCode, key, prefix >>> MASK_WIDTH);
+        Tree<K, V> result = tree.remove(hashCode, key, level + 1);
         if (tree != result) {
-          return compact(this, result, prefix & MASK);
+          return compact(this, result, prefix);
         }
         return this;
       }
       Entry<K, V> entry = (Entry<K, V>) item;
       Entry<K, V> result = entry.remove(hashCode, key);
       if (entry != result) {
-        return compact(this, result, prefix & MASK);
+        return compact(this, result, prefix);
       }
       return this;
     }
@@ -242,7 +230,7 @@ public class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
     }
 
     Item<K, V> item(int prefix) {
-      int bit = 1 << (prefix & MASK);
+      int bit = 1 << prefix;
       if ((mask & bit) == 0) {
         return null;
       }
