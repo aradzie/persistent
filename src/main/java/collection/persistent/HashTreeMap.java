@@ -152,8 +152,8 @@ public final class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
 
     @Override
     V find(int hashCode, K key, int level) {
-      int prefix = (hashCode >>> (level * MASK_WIDTH)) & MASK;
-      Item<K, V> item = item(prefix);
+      int index = (hashCode >>> (level * MASK_WIDTH)) & MASK;
+      Item<K, V> item = item(index);
       if (item instanceof Tree) {
         Tree<K, V> tree = (Tree<K, V>) item;
         return tree.find(hashCode, key, level + 1);
@@ -162,8 +162,8 @@ public final class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
     }
 
     Tree<K, V> insert(int hashCode, K key, V value, int level, Context context) {
-      int prefix = (hashCode >>> (level * MASK_WIDTH)) & MASK;
-      Item<K, V> item = item(prefix);
+      int index = (hashCode >>> (level * MASK_WIDTH)) & MASK;
+      Item<K, V> item = item(index);
       if (item == null) {
         // The slot is empty, put new entry in it.
         item = new Entry<K, V>(hashCode, key, value, null);
@@ -197,12 +197,12 @@ public final class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
           context.size++;
         }
       }
-      return new Tree<K, V>(this, item, prefix);
+      return new Tree<K, V>(this, item, index);
     }
 
     Tree<K, V> remove(int hashCode, K key, int level) {
-      int prefix = (hashCode >>> (level * MASK_WIDTH)) & MASK;
-      Item<K, V> item = item(prefix);
+      int index = (hashCode >>> (level * MASK_WIDTH)) & MASK;
+      Item<K, V> item = item(index);
       if (item == null) {
         return this;
       }
@@ -217,12 +217,12 @@ public final class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
         return this;
       }
       if (result == null) {
-        if ((mask & ~(1 << prefix)) == 0) {
+        if ((mask & ~(1 << index)) == 0) {
           return null; // Removed last entry from this tree.
         }
         // TODO contract tables with only one entry
       }
-      return new Tree<K, V>(this, result, prefix);
+      return new Tree<K, V>(this, result, index);
     }
 
     Item<K, V> item(int prefix) {
