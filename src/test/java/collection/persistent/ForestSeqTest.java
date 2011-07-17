@@ -1,4 +1,4 @@
-package collection;
+package collection.persistent;
 
 import org.junit.Test;
 

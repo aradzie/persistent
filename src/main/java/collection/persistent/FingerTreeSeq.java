@@ -1,4 +1,4 @@
-package collection;
+package collection.persistent;
 
 import debug.IndentingPrintWriter;
 import debug.Printable;

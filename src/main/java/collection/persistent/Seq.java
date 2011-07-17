@@ -1,4 +1,4 @@
-package collection;
+package collection.persistent;
 
 /**
  * A generic persistent list interface. Every mutation operation

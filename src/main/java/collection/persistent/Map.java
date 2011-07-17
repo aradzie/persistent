@@ -1,4 +1,4 @@
-package collection;
+package collection.persistent;
 
 public interface Map<K, V> extends Iterable<Map.Entry<K, V>> {
   V get(K key);

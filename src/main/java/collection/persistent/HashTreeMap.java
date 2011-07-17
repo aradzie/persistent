@@ -1,4 +1,4 @@
-package collection;
+package collection.persistent;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;

@@ -1,4 +1,4 @@
-package collection;
+package collection.persistent;
 
 /**
  * A persistent random-access list implementation based on the publication

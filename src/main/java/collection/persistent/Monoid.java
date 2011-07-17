@@ -1,4 +1,4 @@
-package collection;
+package collection.persistent;
 
 public interface Monoid<T extends Monoid<T>> {
   /**

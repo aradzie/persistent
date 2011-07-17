@@ -1,4 +1,4 @@
-package collection;
+package collection.persistent;
 
 abstract class AbstractHashMap<K, V> implements Map<K, V> {
   protected static int keyHashCode(Object key) {
