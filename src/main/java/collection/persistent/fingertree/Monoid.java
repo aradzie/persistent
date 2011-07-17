@@ -1,4 +1,4 @@
-package collection.persistent;
+package collection.persistent.fingertree;
 
 public interface Monoid<T extends Monoid<T>> {
   /**
