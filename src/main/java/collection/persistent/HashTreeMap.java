@@ -287,6 +287,7 @@ public final class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
         implements List<Map.Entry<K, V>> {
       final NodeLevel<K, V> parent;
       final Entry<K, V> entry;
+      List<Map.Entry<K, V>> tail;
 
       EntryLevel(NodeLevel<K, V> parent, Entry<K, V> entry) {
         this.parent = parent;
@@ -299,11 +300,16 @@ public final class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
       }
 
       @Override
-      public List<Map.Entry<K, V>> tail() {
-        if (entry.next != null) {
-          return new EntryLevel<K, V>(parent, entry.next);
+      public synchronized List<Map.Entry<K, V>> tail() {
+        if (tail == null) {
+          if (entry.next != null) {
+            tail = new EntryLevel<K, V>(parent, entry.next);
+          }
+          else {
+            tail = parent.tail();
+          }
         }
-        return parent.tail();
+        return tail;
       }
     }
   }
