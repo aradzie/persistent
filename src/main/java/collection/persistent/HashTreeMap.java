@@ -14,16 +14,13 @@ public final class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
   private static final int MASK_WIDTH = 5;
   private static final int MASK = 31;
   private final Tree<K, V> root;
-  private final int size;
 
   public HashTreeMap() {
     root = new Tree<K, V>();
-    size = 0;
   }
 
-  private HashTreeMap(Tree<K, V> root, int size) {
+  private HashTreeMap(Tree<K, V> root) {
     this.root = root;
-    this.size = size;
   }
 
   @Override
@@ -33,12 +30,11 @@ public final class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
 
   @Override
   public HashTreeMap<K, V> put(K key, V value) {
-    Context context = new Context(size);
-    Tree<K, V> result = root.insert(keyHashCode(key), key, value, 0, context);
+    Tree<K, V> result = root.insert(keyHashCode(key), key, value, 0);
     if (root == result) {
       return this;
     }
-    return new HashTreeMap<K, V>(result, context.size);
+    return new HashTreeMap<K, V>(result);
   }
 
   @Override
@@ -48,16 +44,11 @@ public final class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
       return this;
     }
     if (result == null) {
-      return new HashTreeMap<K, V>(new Tree<K, V>(), 0);
+      return new HashTreeMap<K, V>(new Tree<K, V>());
     }
     else {
-      return new HashTreeMap<K, V>(result, size - 1);
+      return new HashTreeMap<K, V>(result);
     }
-  }
-
-  @Override
-  public int size() {
-    return size;
   }
 
   @Override
@@ -68,14 +59,6 @@ public final class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
   @Override
   public Iterator<Map.Entry<K, V>> iterator() {
     return new It<K, V>(root);
-  }
-
-  private static final class Context {
-    int size;
-
-    Context(int size) {
-      this.size = size;
-    }
   }
 
   private static final class Tree<K, V> extends Item<K, V> {
@@ -166,17 +149,16 @@ public final class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
       return Entry.find((Entry<K, V>) item, hashCode, key);
     }
 
-    Tree<K, V> insert(int hashCode, K key, V value, int level, Context context) {
+    Tree<K, V> insert(int hashCode, K key, V value, int level) {
       int index = (hashCode >>> (level * MASK_WIDTH)) & MASK;
       Item<K, V> item = item(index);
       if (item == null) {
         // The slot is empty, put new entry in it.
         item = new Entry<K, V>(hashCode, key, value, null);
-        context.size++;
       }
       else if (item instanceof Tree) {
         // The slot is occupied by a subtree, let it handle insertion.
-        item = ((Tree<K, V>) item).insert(hashCode, key, value, level + 1, context);
+        item = ((Tree<K, V>) item).insert(hashCode, key, value, level + 1);
       }
       else {
         // The slot is filled with an entry, either create a subtree
@@ -199,7 +181,6 @@ public final class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
             item = new Tree<K, V>(entry,
                 new Entry<K, V>(hashCode, key, value, null), level + 1);
           }
-          context.size++;
         }
       }
       return new Tree<K, V>(this, item, index);

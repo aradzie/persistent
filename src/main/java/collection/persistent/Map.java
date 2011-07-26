@@ -9,8 +9,6 @@ public interface Map<K, V> extends Listable<Map.Entry<K, V>>, Iterable<Map.Entry
 
   Map<K, V> remove(K key);
 
-  int size();
-
   @Override
   List<Entry<K, V>> list();
 
