@@ -12,7 +12,7 @@ import java.util.NoSuchElementException;
  * @param <K> Key type.
  * @param <V> Value type.
  */
-public final class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
+public final class ArrayTrieHashMap<K, V> implements Map<K, V> {
   @Nullable
   @Override
   public V get(K key) {
@@ -40,13 +40,103 @@ public final class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
     return Collections.emptyIterator();
   }
 
+  private static int keyHashCode(Object key) {
+    if (key == null) {
+      return 0;
+    }
+    return key.hashCode();
+  }
+
+  private static boolean keysEqual(Object a, Object b) {
+    return a == b || a != null && b != null && a.equals(b);
+  }
+
+  private interface Node<K, V> {
+    //
+  }
+
+  private static final class Leaf<K, V>
+      implements Node<K, V>, Map.Entry<K, V> {
+    final int hashCode;
+    final K key;
+    final V value;
+    final Leaf<K, V> next;
+
+    Leaf(int hashCode, K key, V value, Leaf<K, V> next) {
+      this.hashCode = hashCode;
+      this.key = key;
+      this.value = value;
+      this.next = next;
+    }
+
+    @Override
+    public K getKey() {
+      return key;
+    }
+
+    @Override
+    public V getValue() {
+      return value;
+    }
+
+    static <K, V> V find(Leaf<K, V> leaf, int hashCode, K key) {
+      while (leaf != null) {
+        if (leaf.hashCode == hashCode && keysEqual(leaf.key, key)) {
+          return leaf.value;
+        }
+        leaf = leaf.next;
+      }
+      return null;
+    }
+
+    Leaf<K, V> remove(int hashCode, K key) {
+      if (this.hashCode == hashCode && keysEqual(this.key, key)) {
+        return next;
+      }
+      if (next == null) {
+        return this;
+      }
+      else {
+        Leaf<K, V> result = next.remove(hashCode, key);
+        if (next != result) {
+          return new Leaf<K, V>(this.hashCode, this.key, this.value, result);
+        }
+        return this;
+      }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) { return true; }
+      if (!(o instanceof Leaf)) { return false; }
+      Leaf that = (Leaf) o;
+      if (hashCode != that.hashCode) { return false; }
+      if (key != null ? !key.equals(that.key) : that.key != null) { return false; }
+      if (value != null ? !value.equals(that.value) : that.value != null) { return false; }
+      return true;
+    }
+
+    @Override
+    public int hashCode() {
+      int result = hashCode;
+      result = 31 * result + (key != null ? key.hashCode() : 0);
+      result = 31 * result + (value != null ? value.hashCode() : 0);
+      return result;
+    }
+
+    @Override
+    public String toString() {
+      return "key=" + key + "; value=" + value;
+    }
+  }
+
   private static final class Tree<K, V>
-      extends AbstractHashMap<K, V> implements Item<K, V> {
+      implements Node<K, V>, Map<K, V> {
     private static final Tree EMPTY = new Tree();
     private static final int MASK_WIDTH = 5;
     private static final int MASK = 31;
     final int mask;
-    final Item<K, V>[] items;
+    final Node<K, V>[] nodes;
 
     static <K, V> Tree<K, V> empty() {
       return EMPTY;
@@ -54,73 +144,73 @@ public final class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
 
     Tree() {
       mask = 0;
-      items = new Item[]{};
+      nodes = new Node[]{};
     }
 
-    Tree(Tree<K, V> that, Item<K, V> entry, int index) {
-      if (entry != null) {
+    Tree(Tree<K, V> that, Node<K, V> node, int index) {
+      if (node != null) {
         if ((that.mask & (1 << index)) == 0) {
-          // Insert new entry into node.
+          // Insert new node into node.
           mask = that.mask | (1 << index);
-          items = new Item[Integer.bitCount(mask)];
+          nodes = new Node[Integer.bitCount(mask)];
           int offset = offset(1 << index);
-          for (int n = 0; n < items.length; n++) {
+          for (int n = 0; n < nodes.length; n++) {
             if (n < offset) {
-              items[n] = that.items[n];
+              nodes[n] = that.nodes[n];
             }
             else if (n == offset) {
-              items[n] = entry;
+              nodes[n] = node;
             }
             else {
-              items[n] = that.items[n - 1];
+              nodes[n] = that.nodes[n - 1];
             }
           }
         }
         else {
-          // Replace existing entry in node.
+          // Replace existing node in node.
           mask = that.mask;
-          items = new Item[Integer.bitCount(mask)];
+          nodes = new Node[Integer.bitCount(mask)];
           int offset = offset(1 << index);
-          for (int n = 0; n < items.length; n++) {
+          for (int n = 0; n < nodes.length; n++) {
             if (n == offset) {
-              items[n] = entry;
+              nodes[n] = node;
             }
             else {
-              items[n] = that.items[n];
+              nodes[n] = that.nodes[n];
             }
           }
         }
       }
       else {
-        // Remove entry from node.
+        // Remove node from node.
         mask = that.mask & ~(1 << index);
-        items = new Item[Integer.bitCount(mask)];
+        nodes = new Node[Integer.bitCount(mask)];
         int offset = offset(1 << index);
-        for (int n = 0; n < items.length; n++) {
+        for (int n = 0; n < nodes.length; n++) {
           if (n < offset) {
-            items[n] = that.items[n];
+            nodes[n] = that.nodes[n];
           }
           else {
-            items[n] = that.items[n + 1];
+            nodes[n] = that.nodes[n + 1];
           }
         }
       }
     }
 
-    Tree(Entry<K, V> e1, Entry<K, V> e2, int level) {
+    Tree(Leaf<K, V> e1, Leaf<K, V> e2, int level) {
       int index1 = (e1.hashCode >>> (MASK_WIDTH * level)) & MASK;
       int index2 = (e2.hashCode >>> (MASK_WIDTH * level)) & MASK;
       if (index1 == index2) {
         mask = 1 << index1;
-        items = new Item[]{new Tree<K, V>(e1, e2, level + 1)};
+        nodes = new Node[]{new Tree<K, V>(e1, e2, level + 1)};
       }
       else {
         mask = (1 << index1) | (1 << index2);
         if (index1 < index2) {
-          items = new Item[]{e1, e2};
+          nodes = new Node[]{e1, e2};
         }
         else {
-          items = new Item[]{e2, e1};
+          nodes = new Node[]{e2, e1};
         }
       }
     }
@@ -139,14 +229,14 @@ public final class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
     public Map<K, V> remove(K key) {
       Tree<K, V> tree = remove(keyHashCode(key), key, 0);
       if (tree == null) {
-        return new HashTreeMap<K, V>();
+        return new ArrayTrieHashMap<K, V>();
       }
       return tree;
     }
 
     @Override
     public List<Map.Entry<K, V>> list() {
-      return new ListImpl.NodeLevel<K, V>(null, this, 0).findEntry();
+      return new ListImpl.TreeLevel<K, V>(null, this, 0).findLeaf();
     }
 
     @Override
@@ -156,66 +246,66 @@ public final class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
 
     V find(int hashCode, K key, int level) {
       int index = index(hashCode, level);
-      Item<K, V> item = item(index);
-      if (item instanceof Tree) {
-        return ((Tree<K, V>) item).find(hashCode, key, level + 1);
+      Node<K, V> node = item(index);
+      if (node instanceof Tree) {
+        return ((Tree<K, V>) node).find(hashCode, key, level + 1);
       }
       else {
-        return Entry.find((Entry<K, V>) item, hashCode, key);
+        return Leaf.find((Leaf<K, V>) node, hashCode, key);
       }
     }
 
     Tree<K, V> insert(int hashCode, K key, V value, int level) {
       int index = index(hashCode, level);
-      Item<K, V> item = item(index);
-      if (item == null) {
+      Node<K, V> node = item(index);
+      if (node == null) {
         // The slot is empty, put new entry in it.
-        item = new Entry<K, V>(hashCode, key, value, null);
+        node = new Leaf<K, V>(hashCode, key, value, null);
       }
-      else if (item instanceof Tree) {
+      else if (node instanceof Tree) {
         // The slot is occupied by a subtree, let it handle insertion.
-        item = ((Tree<K, V>) item).insert(hashCode, key, value, level + 1);
+        node = ((Tree<K, V>) node).insert(hashCode, key, value, level + 1);
       }
       else {
         // The slot is filled with an entry, either create a subtree
         // or resolve collision.
-        Entry<K, V> entry = (Entry<K, V>) item;
-        Entry<K, V> result = entry.remove(hashCode, key);
-        if (entry != result) {
+        Leaf<K, V> leaf = (Leaf<K, V>) node;
+        Leaf<K, V> result = leaf.remove(hashCode, key);
+        if (leaf != result) {
           // Simply replace entry with the same key.
-          item = new Entry<K, V>(hashCode, key, value, result);
+          node = new Leaf<K, V>(hashCode, key, value, result);
         }
         else {
           // Prefixes of both current and new entry are equal so far.
-          if (hashCode == entry.hashCode) {
+          if (hashCode == leaf.hashCode) {
             // The suffixes are also equal, so this is a collision.
-            item = new Entry<K, V>(hashCode, key, value, entry);
+            node = new Leaf<K, V>(hashCode, key, value, leaf);
           }
           else {
             // The suffixes are different, create a subtree
             // to hold both entries.
-            item = new Tree<K, V>(entry,
-                new Entry<K, V>(hashCode, key, value, null), level + 1);
+            node = new Tree<K, V>(leaf,
+                new Leaf<K, V>(hashCode, key, value, null), level + 1);
           }
         }
       }
-      return new Tree<K, V>(this, item, index);
+      return new Tree<K, V>(this, node, index);
     }
 
     Tree<K, V> remove(int hashCode, K key, int level) {
       int index = index(hashCode, level);
-      Item<K, V> item = item(index);
-      if (item == null) {
+      Node<K, V> node = item(index);
+      if (node == null) {
         return this;
       }
-      Item<K, V> result;
-      if (item instanceof Tree) {
-        result = ((Tree<K, V>) item).remove(hashCode, key, level + 1);
+      Node<K, V> result;
+      if (node instanceof Tree) {
+        result = ((Tree<K, V>) node).remove(hashCode, key, level + 1);
       }
       else {
-        result = ((Entry<K, V>) item).remove(hashCode, key);
+        result = ((Leaf<K, V>) node).remove(hashCode, key);
       }
-      if (item == result) {
+      if (node == result) {
         return this;
       }
       if (result == null) {
@@ -227,12 +317,12 @@ public final class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
       return new Tree<K, V>(this, result, index);
     }
 
-    Item<K, V> item(int prefix) {
+    Node<K, V> item(int prefix) {
       int bit = 1 << prefix;
       if ((mask & bit) == 0) {
         return null;
       }
-      return items[offset(bit)];
+      return nodes[offset(bit)];
     }
 
     int offset(int bit) {
@@ -251,30 +341,30 @@ public final class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
    * @param <V> Value type.
    */
   private abstract static class ListImpl<K, V> {
-    static final class NodeLevel<K, V> extends ListImpl<K, V> {
-      final NodeLevel<K, V> parent;
+    static final class TreeLevel<K, V> extends ListImpl<K, V> {
+      final TreeLevel<K, V> parent;
       final Tree<K, V> tree;
       final int index;
 
-      NodeLevel(NodeLevel<K, V> parent, Tree<K, V> tree, int index) {
+      TreeLevel(TreeLevel<K, V> parent, Tree<K, V> tree, int index) {
         this.parent = parent;
         this.tree = tree;
         this.index = index;
       }
 
-      List<Map.Entry<K, V>> findEntry() {
-        Item<K, V> item = tree.items[index];
-        if (item instanceof Tree) {
-          return new NodeLevel<K, V>(this, (Tree<K, V>) item, 0).findEntry();
+      List<Map.Entry<K, V>> findLeaf() {
+        Node<K, V> node = tree.nodes[index];
+        if (node instanceof Tree) {
+          return new TreeLevel<K, V>(this, (Tree<K, V>) node, 0).findLeaf();
         }
         else {
-          return new EntryLevel<K, V>(this, (Entry<K, V>) item);
+          return new LeafLevel<K, V>(this, (Leaf<K, V>) node);
         }
       }
 
       List<Map.Entry<K, V>> tail() {
-        if (index + 1 < tree.items.length) {
-          return new NodeLevel<K, V>(parent, tree, index + 1).findEntry();
+        if (index + 1 < tree.nodes.length) {
+          return new TreeLevel<K, V>(parent, tree, index + 1).findLeaf();
         }
         if (parent != null) {
           return parent.tail();
@@ -283,27 +373,27 @@ public final class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
       }
     }
 
-    static final class EntryLevel<K, V> extends ListImpl<K, V>
+    static final class LeafLevel<K, V> extends ListImpl<K, V>
         implements List<Map.Entry<K, V>> {
-      final NodeLevel<K, V> parent;
-      final Entry<K, V> entry;
+      final TreeLevel<K, V> parent;
+      final Leaf<K, V> leaf;
       List<Map.Entry<K, V>> tail;
 
-      EntryLevel(NodeLevel<K, V> parent, Entry<K, V> entry) {
+      LeafLevel(TreeLevel<K, V> parent, Leaf<K, V> leaf) {
         this.parent = parent;
-        this.entry = entry;
+        this.leaf = leaf;
       }
 
       @Override
-      public Entry<K, V> head() {
-        return entry;
+      public Leaf<K, V> head() {
+        return leaf;
       }
 
       @Override
       public synchronized List<Map.Entry<K, V>> tail() {
         if (tail == null) {
-          if (entry.next != null) {
-            tail = new EntryLevel<K, V>(parent, entry.next);
+          if (leaf.next != null) {
+            tail = new LeafLevel<K, V>(parent, leaf.next);
           }
           else {
             tail = parent.tail();
@@ -330,51 +420,51 @@ public final class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
 
       abstract boolean hasNext();
 
-      abstract Item<K, V> next();
+      abstract Node<K, V> next();
 
-      static final class NodeLevel<K, V> extends Stack<K, V> {
-        final Item<K, V>[] items;
+      static final class TreeLevel<K, V> extends Stack<K, V> {
+        final Node<K, V>[] nodes;
         int index;
 
-        NodeLevel(Stack<K, V> next, Tree<K, V> tree) {
+        TreeLevel(Stack<K, V> next, Tree<K, V> tree) {
           super(next);
-          items = tree.items;
+          nodes = tree.nodes;
         }
 
         @Override
         boolean hasNext() {
-          return index < items.length;
+          return index < nodes.length;
         }
 
         @Override
-        Item<K, V> next() {
+        Node<K, V> next() {
           if (!hasNext()) {
             throw new IllegalStateException();
           }
-          return items[index++];
+          return nodes[index++];
         }
       }
 
-      static final class EntryLevel<K, V> extends Stack<K, V> {
-        Entry<K, V> entry;
+      static final class LeafLevel<K, V> extends Stack<K, V> {
+        Leaf<K, V> leaf;
 
-        EntryLevel(Stack<K, V> next, Entry<K, V> entry) {
+        LeafLevel(Stack<K, V> next, Leaf<K, V> leaf) {
           super(next);
-          this.entry = entry;
+          this.leaf = leaf;
         }
 
         @Override
         boolean hasNext() {
-          return entry != null;
+          return leaf != null;
         }
 
         @Override
-        Item<K, V> next() {
+        Node<K, V> next() {
           if (!hasNext()) {
             throw new IllegalStateException();
           }
-          Entry<K, V> current = entry;
-          entry = entry.next;
+          Leaf<K, V> current = leaf;
+          leaf = leaf.next;
           return current;
         }
       }
@@ -383,8 +473,8 @@ public final class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
     Stack<K, V> stack;
 
     It(Tree<K, V> root) {
-      if (root.items.length > 0) {
-        stack = new Stack.NodeLevel<K, V>(null, root);
+      if (root.nodes.length > 0) {
+        stack = new Stack.TreeLevel<K, V>(null, root);
       }
     }
 
@@ -400,23 +490,23 @@ public final class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
           throw new NoSuchElementException();
         }
         if (stack.hasNext()) {
-          Item<K, V> item = stack.next();
-          if (item instanceof Entry<?, ?>) {
-            Entry<K, V> entry = (Entry<K, V>) item;
-            if (stack instanceof Stack.EntryLevel<?, ?>
-                || entry.next == null) {
+          Node<K, V> node = stack.next();
+          if (node instanceof Leaf<?, ?>) {
+            Leaf<K, V> leaf = (Leaf<K, V>) node;
+            if (stack instanceof Stack.LeafLevel<?, ?>
+                || leaf.next == null) {
               while (stack != null) {
                 if (stack.hasNext()) {
                   break;
                 }
                 stack = stack.next;
               }
-              return entry;
+              return leaf;
             }
-            stack = new Stack.EntryLevel<K, V>(stack, (Entry<K, V>) item);
+            stack = new Stack.LeafLevel<K, V>(stack, (Leaf<K, V>) node);
           }
           else {
-            stack = new Stack.NodeLevel<K, V>(stack, (Tree<K, V>) item);
+            stack = new Stack.TreeLevel<K, V>(stack, (Tree<K, V>) node);
           }
         }
         else {
