@@ -250,19 +250,14 @@ public final class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
    * @param <K> Key type.
    * @param <V> Value type.
    */
-  private abstract static class ListImpl<K, V> implements List<Map.Entry<K, V>> {
-    final ListImpl<K, V> parent;
-
-    ListImpl(ListImpl<K, V> parent) {
-      this.parent = parent;
-    }
-
+  private abstract static class ListImpl<K, V> {
     static final class NodeLevel<K, V> extends ListImpl<K, V> {
+      final NodeLevel<K, V> parent;
       final Tree<K, V> tree;
       final int index;
 
-      NodeLevel(ListImpl<K, V> parent, Tree<K, V> tree, int index) {
-        super(parent);
+      NodeLevel(NodeLevel<K, V> parent, Tree<K, V> tree, int index) {
+        this.parent = parent;
         this.tree = tree;
         this.index = index;
       }
@@ -277,13 +272,7 @@ public final class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
         }
       }
 
-      @Override
-      public Entry<K, V> head() {
-        throw new IllegalStateException();
-      }
-
-      @Override
-      public List<Map.Entry<K, V>> tail() {
+      List<Map.Entry<K, V>> tail() {
         if (index + 1 < tree.items.length) {
           return new NodeLevel<K, V>(parent, tree, index + 1).findEntry();
         }
@@ -294,11 +283,13 @@ public final class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
       }
     }
 
-    static final class EntryLevel<K, V> extends ListImpl<K, V> {
+    static final class EntryLevel<K, V> extends ListImpl<K, V>
+        implements List<Map.Entry<K, V>> {
+      final NodeLevel<K, V> parent;
       final Entry<K, V> entry;
 
-      EntryLevel(ListImpl<K, V> parent, Entry<K, V> entry) {
-        super(parent);
+      EntryLevel(NodeLevel<K, V> parent, Entry<K, V> entry) {
+        this.parent = parent;
         this.entry = entry;
       }
 
