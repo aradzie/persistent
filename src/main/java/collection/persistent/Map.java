@@ -1,16 +1,15 @@
 package collection.persistent;
 
+import javax.annotation.Nullable;
 import java.util.Iterator;
 
 public interface Map<K, V> extends Listable<Map.Entry<K, V>>, Iterable<Map.Entry<K, V>> {
+  @Nullable
   V get(K key);
 
   Map<K, V> put(K key, V value);
 
   Map<K, V> remove(K key);
-
-  @Override
-  List<Entry<K, V>> list();
 
   /**
    * Please note that the returned iterator is not thread-safe
@@ -23,8 +22,10 @@ public interface Map<K, V> extends Listable<Map.Entry<K, V>>, Iterable<Map.Entry
   Iterator<Entry<K, V>> iterator();
 
   interface Entry<K, V> {
+    @Nullable
     K getKey();
 
+    @Nullable
     V getValue();
 
     @Override

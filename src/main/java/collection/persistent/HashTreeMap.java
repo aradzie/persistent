@@ -1,5 +1,6 @@
 package collection.persistent;
 
+import javax.annotation.Nullable;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
@@ -23,6 +24,7 @@ public final class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
     this.root = root;
   }
 
+  @Nullable
   @Override
   public V get(K key) {
     return root.find(keyHashCode(key), key, 0);
@@ -51,6 +53,7 @@ public final class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
     }
   }
 
+  @Nullable
   @Override
   public List<Map.Entry<K, V>> list() {
     return new ListImpl.NodeLevel<K, V>(null, root, 0).init();
