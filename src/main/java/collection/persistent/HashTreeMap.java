@@ -61,6 +61,11 @@ public final class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
   }
 
   @Override
+  public List<Map.Entry<K, V>> list() {
+    return new ListImpl.NodeLevel<K, V>(null, root, 0).init();
+  }
+
+  @Override
   public Iterator<Map.Entry<K, V>> iterator() {
     return new It<K, V>(root);
   }
@@ -238,7 +243,94 @@ public final class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
     }
   }
 
-  private static class It<K, V> implements Iterator<Map.Entry<K, V>> {
+  /**
+   * Implements list of map entries.
+   *
+   * @param <K> Key type.
+   * @param <V> Value type.
+   */
+  private abstract static class ListImpl<K, V> implements List<Map.Entry<K, V>> {
+    final ListImpl<K, V> parent;
+
+    ListImpl(ListImpl<K, V> parent) {
+      this.parent = parent;
+    }
+
+    static final class NodeLevel<K, V> extends ListImpl<K, V> {
+      final Tree<K, V> tree;
+      final int index;
+
+      NodeLevel(ListImpl<K, V> parent, Tree<K, V> tree, int index) {
+        super(parent);
+        this.tree = tree;
+        this.index = index;
+      }
+
+      List<Map.Entry<K, V>> findEntry() {
+        Item<K, V> item = tree.items[index];
+        if (item instanceof Entry) {
+          return new EntryLevel<K, V>(this, (Entry<K, V>) item);
+        }
+        if (item instanceof Tree) {
+          return new NodeLevel<K, V>(this, (Tree<K, V>) item, 0).findEntry();
+        }
+        throw new IllegalStateException();
+      }
+
+      @Override
+      public Entry<K, V> head() {
+        throw new IllegalStateException();
+      }
+
+      @Override
+      public List<Map.Entry<K, V>> tail() {
+        if (index + 1 < tree.items.length) {
+          return new NodeLevel<K, V>(parent, tree, index + 1).findEntry();
+        }
+        if (parent != null) {
+          return parent.tail();
+        }
+        return null;
+      }
+
+      List<Map.Entry<K, V>> init() {
+        if (tree.items.length > 0) {
+          return findEntry();
+        }
+        return null;
+      }
+    }
+
+    static final class EntryLevel<K, V> extends ListImpl<K, V> {
+      final Entry<K, V> entry;
+
+      EntryLevel(ListImpl<K, V> parent, Entry<K, V> entry) {
+        super(parent);
+        this.entry = entry;
+      }
+
+      @Override
+      public Entry<K, V> head() {
+        return entry;
+      }
+
+      @Override
+      public List<Map.Entry<K, V>> tail() {
+        if (entry.next != null) {
+          return new EntryLevel<K, V>(parent, entry.next);
+        }
+        return parent.tail();
+      }
+    }
+  }
+
+  /**
+   * Implements thread-unsafe iterator over map entries.
+   *
+   * @param <K> Key type.
+   * @param <V> Value type.
+   */
+  private static final class It<K, V> implements Iterator<Map.Entry<K, V>> {
     abstract static class Stack<K, V> {
       final Stack<K, V> next;
 
@@ -249,52 +341,52 @@ public final class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
       abstract boolean hasNext();
 
       abstract Item<K, V> next();
-    }
 
-    static class NodeLevel<K, V> extends Stack<K, V> {
-      final Item<K, V>[] items;
-      int index;
+      static final class NodeLevel<K, V> extends Stack<K, V> {
+        final Item<K, V>[] items;
+        int index;
 
-      NodeLevel(Stack<K, V> next, Tree<K, V> tree) {
-        super(next);
-        items = tree.items;
-      }
-
-      @Override
-      boolean hasNext() {
-        return index < items.length;
-      }
-
-      @Override
-      Item<K, V> next() {
-        if (!hasNext()) {
-          throw new IllegalStateException();
+        NodeLevel(Stack<K, V> next, Tree<K, V> tree) {
+          super(next);
+          items = tree.items;
         }
-        return items[index++];
-      }
-    }
 
-    static class EntryLevel<K, V> extends Stack<K, V> {
-      Entry<K, V> entry;
-
-      EntryLevel(Stack<K, V> next, Entry<K, V> entry) {
-        super(next);
-        this.entry = entry;
-      }
-
-      @Override
-      boolean hasNext() {
-        return entry != null;
-      }
-
-      @Override
-      Item<K, V> next() {
-        if (!hasNext()) {
-          throw new IllegalStateException();
+        @Override
+        boolean hasNext() {
+          return index < items.length;
         }
-        Entry<K, V> current = entry;
-        entry = entry.next;
-        return current;
+
+        @Override
+        Item<K, V> next() {
+          if (!hasNext()) {
+            throw new IllegalStateException();
+          }
+          return items[index++];
+        }
+      }
+
+      static final class EntryLevel<K, V> extends Stack<K, V> {
+        Entry<K, V> entry;
+
+        EntryLevel(Stack<K, V> next, Entry<K, V> entry) {
+          super(next);
+          this.entry = entry;
+        }
+
+        @Override
+        boolean hasNext() {
+          return entry != null;
+        }
+
+        @Override
+        Item<K, V> next() {
+          if (!hasNext()) {
+            throw new IllegalStateException();
+          }
+          Entry<K, V> current = entry;
+          entry = entry.next;
+          return current;
+        }
       }
     }
 
@@ -302,7 +394,7 @@ public final class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
 
     It(Tree<K, V> root) {
       if (root.items.length > 0) {
-        stack = new NodeLevel<K, V>(null, root);
+        stack = new Stack.NodeLevel<K, V>(null, root);
       }
     }
 
@@ -321,7 +413,7 @@ public final class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
           Item<K, V> item = stack.next();
           if (item instanceof Entry<?, ?>) {
             Entry<K, V> entry = (Entry<K, V>) item;
-            if (stack instanceof EntryLevel<?, ?>
+            if (stack instanceof Stack.EntryLevel<?, ?>
                 || entry.next == null) {
               while (stack != null) {
                 if (stack.hasNext()) {
@@ -331,10 +423,10 @@ public final class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
               }
               return entry;
             }
-            stack = new EntryLevel<K, V>(stack, (Entry<K, V>) item);
+            stack = new Stack.EntryLevel<K, V>(stack, (Entry<K, V>) item);
           }
           else {
-            stack = new NodeLevel<K, V>(stack, (Tree<K, V>) item);
+            stack = new Stack.NodeLevel<K, V>(stack, (Tree<K, V>) item);
           }
         }
         else {

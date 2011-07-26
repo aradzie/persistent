@@ -13,18 +13,26 @@ public class HashTreeMapTest {
     HashTreeMap<String, String> map = new HashTreeMap<String, String>();
 
     assertNull(map.get(null));
+    assertNull(map.list());
 
     map = map.put(null, "null");
     assertEquals("null", map.get(null));
     assertEquals(1, map.size());
+    assertEquals(null, map.list().head().getKey());
+    assertEquals("null", map.list().head().getValue());
+    assertNull(map.list().tail());
 
     map = map.put(null, "haha");
     assertEquals("haha", map.get(null));
     assertEquals(1, map.size());
+    assertEquals(null, map.list().head().getKey());
+    assertEquals("haha", map.list().head().getValue());
+    assertNull(map.list().tail());
 
     map = map.remove(null);
     assertNull(map.get(null));
     assertEquals(0, map.size());
+    assertNull(map.list());
   }
 
   @Test
@@ -199,18 +207,36 @@ public class HashTreeMapTest {
 
   static <K, V> void assertEqualKeys(Map<K, V> map, K... keys) {
     HashSet<K> expected = new HashSet<K>(Arrays.asList(keys));
+
     HashSet<K> actual = new HashSet<K>();
     for (Map.Entry<K, V> entry : map) {
-      actual.add(entry.getKey());
+      assertTrue(actual.add(entry.getKey()));
+    }
+    assertEquals(expected, actual);
+
+    actual.clear();
+    Listable.List<Map.Entry<K, V>> list = map.list();
+    while (list != null) {
+      assertTrue(actual.add(list.head().getKey()));
+      list = list.tail();
     }
     assertEquals(expected, actual);
   }
 
   static <K, V> void assertEqualValues(Map<K, V> map, V... values) {
     HashSet<V> expected = new HashSet<V>(Arrays.asList(values));
+
     HashSet<V> actual = new HashSet<V>();
     for (Map.Entry<K, V> entry : map) {
-      actual.add(entry.getValue());
+      assertTrue(actual.add(entry.getValue()));
+    }
+    assertEquals(expected, actual);
+
+    actual.clear();
+    Listable.List<Map.Entry<K, V>> list = map.list();
+    while (list != null) {
+      assertTrue(actual.add(list.head().getValue()));
+      list = list.tail();
     }
     assertEquals(expected, actual);
   }
