@@ -10,7 +10,7 @@ import static org.junit.Assert.*;
 public class HashTreeMapTest {
   @Test
   public void nullKey() {
-    HashTreeMap<String, String> map = new HashTreeMap<String, String>();
+    Map<String, String> map = new HashTreeMap<String, String>();
 
     assertNull(map.get(null));
     assertNull(map.list());
@@ -37,7 +37,7 @@ public class HashTreeMapTest {
 
   @Test
   public void smallMap() {
-    HashTreeMap<Integer, String> map = new HashTreeMap<Integer, String>();
+    Map<Integer, String> map = new HashTreeMap<Integer, String>();
 
     //assertEquals(0, map.size());
     assertNull(map.get(0));
@@ -97,7 +97,7 @@ public class HashTreeMapTest {
 
   @Test
   public void largeMap() {
-    HashTreeMap<String, String> map = new HashTreeMap<String, String>();
+    Map<String, String> map = new HashTreeMap<String, String>();
 
     for (int n = 0; n < 100000; n++) {
       map = map.put(Integer.toString(n, 8), Integer.toString(n, 16));
@@ -160,7 +160,7 @@ public class HashTreeMapTest {
     Key b = new Key("b", 0);
     Key c = new Key("c", 32);
 
-    HashTreeMap<Key, String> map = new HashTreeMap<Key, String>()
+    Map<Key, String> map = new HashTreeMap<Key, String>()
         .put(a, "a").put(b, "b").put(c, "c");
 
     //assertEquals(3, map.size());

@@ -1,6 +1,7 @@
 package collection.persistent;
 
 import javax.annotation.Nullable;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
@@ -12,61 +13,44 @@ import java.util.NoSuchElementException;
  * @param <V> Value type.
  */
 public final class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
-  private static final int MASK_WIDTH = 5;
-  private static final int MASK = 31;
-  private final Tree<K, V> root;
-
-  public HashTreeMap() {
-    root = new Tree<K, V>();
-  }
-
-  private HashTreeMap(Tree<K, V> root) {
-    this.root = root;
-  }
-
   @Nullable
   @Override
   public V get(K key) {
-    return root.find(keyHashCode(key), key, 0);
+    return null;
   }
 
   @Override
-  public HashTreeMap<K, V> put(K key, V value) {
-    Tree<K, V> result = root.insert(keyHashCode(key), key, value, 0);
-    if (root == result) {
-      return this;
-    }
-    return new HashTreeMap<K, V>(result);
+  public Map<K, V> put(K key, V value) {
+    return Tree.<K, V>empty().insert(keyHashCode(key), key, value, 0);
   }
 
   @Override
-  public HashTreeMap<K, V> remove(K key) {
-    Tree<K, V> result = root.remove(keyHashCode(key), key, 0);
-    if (root == result) {
-      return this;
-    }
-    if (result == null) {
-      return new HashTreeMap<K, V>(new Tree<K, V>());
-    }
-    else {
-      return new HashTreeMap<K, V>(result);
-    }
+  public Map<K, V> remove(K key) {
+    return this;
   }
 
   @Nullable
   @Override
   public List<Map.Entry<K, V>> list() {
-    return new ListImpl.NodeLevel<K, V>(null, root, 0).init();
+    return null;
   }
 
   @Override
   public Iterator<Map.Entry<K, V>> iterator() {
-    return new It<K, V>(root);
+    return Collections.emptyIterator();
   }
 
-  private static final class Tree<K, V> extends Item<K, V> {
+  private static final class Tree<K, V>
+      extends AbstractHashMap<K, V> implements Item<K, V> {
+    private static final Tree EMPTY = new Tree();
+    private static final int MASK_WIDTH = 5;
+    private static final int MASK = 31;
     final int mask;
     final Item<K, V>[] items;
+
+    static <K, V> Tree<K, V> empty() {
+      return EMPTY;
+    }
 
     Tree() {
       mask = 0;
@@ -142,18 +126,47 @@ public final class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
     }
 
     @Override
+    public V get(K key) {
+      return find(keyHashCode(key), key, 0);
+    }
+
+    @Override
+    public Map<K, V> put(K key, V value) {
+      return insert(keyHashCode(key), key, value, 0);
+    }
+
+    @Override
+    public Map<K, V> remove(K key) {
+      Tree<K, V> tree = remove(keyHashCode(key), key, 0);
+      if (tree == null) {
+        return new HashTreeMap<K, V>();
+      }
+      return tree;
+    }
+
+    @Override
+    public List<Map.Entry<K, V>> list() {
+      return new ListImpl.NodeLevel<K, V>(null, this, 0).findEntry();
+    }
+
+    @Override
+    public Iterator<Map.Entry<K, V>> iterator() {
+      return new It<K, V>(this);
+    }
+
     V find(int hashCode, K key, int level) {
-      int index = (hashCode >>> (level * MASK_WIDTH)) & MASK;
+      int index = index(hashCode, level);
       Item<K, V> item = item(index);
       if (item instanceof Tree) {
-        Tree<K, V> tree = (Tree<K, V>) item;
-        return tree.find(hashCode, key, level + 1);
+        return ((Tree<K, V>) item).find(hashCode, key, level + 1);
       }
-      return Entry.find((Entry<K, V>) item, hashCode, key);
+      else {
+        return Entry.find((Entry<K, V>) item, hashCode, key);
+      }
     }
 
     Tree<K, V> insert(int hashCode, K key, V value, int level) {
-      int index = (hashCode >>> (level * MASK_WIDTH)) & MASK;
+      int index = index(hashCode, level);
       Item<K, V> item = item(index);
       if (item == null) {
         // The slot is empty, put new entry in it.
@@ -190,7 +203,7 @@ public final class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
     }
 
     Tree<K, V> remove(int hashCode, K key, int level) {
-      int index = (hashCode >>> (level * MASK_WIDTH)) & MASK;
+      int index = index(hashCode, level);
       Item<K, V> item = item(index);
       if (item == null) {
         return this;
@@ -225,6 +238,10 @@ public final class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
     int offset(int bit) {
       return Integer.bitCount(mask & (bit - 1));
     }
+
+    static int index(int hashCode, int level) {
+      return (hashCode >>> (level * MASK_WIDTH)) & MASK;
+    }
   }
 
   /**
@@ -252,13 +269,12 @@ public final class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
 
       List<Map.Entry<K, V>> findEntry() {
         Item<K, V> item = tree.items[index];
-        if (item instanceof Entry) {
-          return new EntryLevel<K, V>(this, (Entry<K, V>) item);
-        }
         if (item instanceof Tree) {
           return new NodeLevel<K, V>(this, (Tree<K, V>) item, 0).findEntry();
         }
-        throw new IllegalStateException();
+        else {
+          return new EntryLevel<K, V>(this, (Entry<K, V>) item);
+        }
       }
 
       @Override
@@ -273,13 +289,6 @@ public final class HashTreeMap<K, V> extends AbstractHashMap<K, V> {
         }
         if (parent != null) {
           return parent.tail();
-        }
-        return null;
-      }
-
-      List<Map.Entry<K, V>> init() {
-        if (tree.items.length > 0) {
-          return findEntry();
         }
         return null;
       }

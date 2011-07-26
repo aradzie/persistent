@@ -12,14 +12,12 @@ abstract class AbstractHashMap<K, V> implements Map<K, V> {
     return a == b || a != null && b != null && a.equals(b);
   }
 
-  protected abstract static class Item<K, V> {
-    V find(int hashCode, K key, int level) {
-      return null;
-    }
+  protected interface Item<K, V> {
+    //
   }
 
   protected static final class Entry<K, V>
-      extends Item<K, V> implements Map.Entry<K, V> {
+      implements Item<K, V>, Map.Entry<K, V> {
     final int hashCode;
     final K key;
     final V value;
