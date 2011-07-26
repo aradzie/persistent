@@ -22,10 +22,8 @@ public interface Map<K, V> extends Listable<Map.Entry<K, V>>, Iterable<Map.Entry
   Iterator<Entry<K, V>> iterator();
 
   interface Entry<K, V> {
-    @Nullable
     K getKey();
 
-    @Nullable
     V getValue();
 
     @Override
