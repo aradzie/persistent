@@ -4,18 +4,14 @@ import javax.annotation.Nullable;
 
 public interface Listable<V> {
   /**
-   * @return List over collections values,
+   * @return List over collection values,
    *         or <code>null</code> if collection is empty.
    */
   @Nullable
   List<V> list();
 
   interface List<V> {
-    /**
-     * @return First element of the current sublist,
-     *         may be <code>null</code> if collection permits so.
-     */
-    @Nullable
+    /** @return First element of the current sublist. */
     V head();
 
     /**
