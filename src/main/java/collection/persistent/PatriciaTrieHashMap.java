@@ -1,7 +1,8 @@
 package collection.persistent;
 
+import collection.persistent.util.EmptyIterator;
+
 import javax.annotation.Nullable;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
@@ -24,7 +25,7 @@ public final class PatriciaTrieHashMap<K, V> implements Map<K, V> {
 
   @Override
   public Iterator<Map.Entry<K, V>> iterator() {
-    return Collections.emptyIterator();
+    return new EmptyIterator<Entry<K, V>>();
   }
 
   @Nullable

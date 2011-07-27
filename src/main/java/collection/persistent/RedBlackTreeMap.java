@@ -1,6 +1,7 @@
 package collection.persistent;
 
-import java.util.Collections;
+import collection.persistent.util.EmptyIterator;
+
 import java.util.Iterator;
 
 /**
@@ -39,7 +40,7 @@ public final class RedBlackTreeMap<K extends Comparable<K>, V> implements Map<K,
 
   @Override
   public Iterator<Entry<K, V>> iterator() {
-    return Collections.emptyIterator();
+    return new EmptyIterator<Entry<K, V>>();
   }
 
   @Override
