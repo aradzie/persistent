@@ -7,7 +7,7 @@ import java.util.HashSet;
 
 import static org.junit.Assert.*;
 
-public abstract class MapTest {
+public abstract class HashMapTest {
   abstract <K, V> Map<K, V> create();
 
   @Test
