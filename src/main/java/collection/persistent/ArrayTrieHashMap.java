@@ -32,12 +32,12 @@ public final class ArrayTrieHashMap<K, V> implements Map<K, V> {
 
   @Nullable
   @Override
-  public List<Map.Entry<K, V>> list() {
+  public List<Entry<K, V>> list() {
     return null;
   }
 
   @Override
-  public Iterator<Map.Entry<K, V>> iterator() {
+  public Iterator<Entry<K, V>> iterator() {
     return new EmptyIterator<Entry<K, V>>();
   }
 
@@ -57,7 +57,7 @@ public final class ArrayTrieHashMap<K, V> implements Map<K, V> {
   }
 
   private static final class Leaf<K, V>
-      implements Node<K, V>, Map.Entry<K, V> {
+      implements Node<K, V>, Entry<K, V> {
     final int hashCode;
     final K key;
     final V value;
@@ -236,12 +236,12 @@ public final class ArrayTrieHashMap<K, V> implements Map<K, V> {
     }
 
     @Override
-    public List<Map.Entry<K, V>> list() {
+    public List<Entry<K, V>> list() {
       return new ListImpl.TreeLevel<K, V>(null, this, 0).findLeaf();
     }
 
     @Override
-    public Iterator<Map.Entry<K, V>> iterator() {
+    public Iterator<Entry<K, V>> iterator() {
       return new It<K, V>(this);
     }
 
@@ -353,7 +353,7 @@ public final class ArrayTrieHashMap<K, V> implements Map<K, V> {
         this.index = index;
       }
 
-      List<Map.Entry<K, V>> findLeaf() {
+      List<Entry<K, V>> findLeaf() {
         Node<K, V> node = tree.nodes[index];
         if (node instanceof Tree) {
           return new TreeLevel<K, V>(this, (Tree<K, V>) node, 0).findLeaf();
@@ -363,7 +363,7 @@ public final class ArrayTrieHashMap<K, V> implements Map<K, V> {
         }
       }
 
-      List<Map.Entry<K, V>> tail() {
+      List<Entry<K, V>> tail() {
         if (index + 1 < tree.nodes.length) {
           return new TreeLevel<K, V>(parent, tree, index + 1).findLeaf();
         }
@@ -375,10 +375,10 @@ public final class ArrayTrieHashMap<K, V> implements Map<K, V> {
     }
 
     static final class LeafLevel<K, V> extends ListImpl<K, V>
-        implements List<Map.Entry<K, V>> {
+        implements List<Entry<K, V>> {
       final TreeLevel<K, V> parent;
       final Leaf<K, V> leaf;
-      List<Map.Entry<K, V>> tail;
+      List<Entry<K, V>> tail;
 
       LeafLevel(TreeLevel<K, V> parent, Leaf<K, V> leaf) {
         this.parent = parent;
@@ -391,7 +391,7 @@ public final class ArrayTrieHashMap<K, V> implements Map<K, V> {
       }
 
       @Override
-      public synchronized List<Map.Entry<K, V>> tail() {
+      public synchronized List<Entry<K, V>> tail() {
         if (tail == null) {
           if (leaf.next != null) {
             tail = new LeafLevel<K, V>(parent, leaf.next);
@@ -411,7 +411,7 @@ public final class ArrayTrieHashMap<K, V> implements Map<K, V> {
    * @param <K> Key type.
    * @param <V> Value type.
    */
-  private static final class It<K, V> implements Iterator<Map.Entry<K, V>> {
+  private static final class It<K, V> implements Iterator<Entry<K, V>> {
     abstract static class Stack<K, V> {
       final Stack<K, V> next;
 
@@ -485,7 +485,7 @@ public final class ArrayTrieHashMap<K, V> implements Map<K, V> {
     }
 
     @Override
-    public Map.Entry<K, V> next() {
+    public Entry<K, V> next() {
       while (true) {
         if (!hasNext()) {
           throw new NoSuchElementException();
