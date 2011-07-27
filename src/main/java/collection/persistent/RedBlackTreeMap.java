@@ -161,6 +161,9 @@ public final class RedBlackTreeMap<K extends Comparable<K>, V> implements Map<K,
 
     @Override
     public V get(K key) {
+      if (key == null) {
+        throw new NullPointerException();
+      }
       return find(this, key);
     }
 
