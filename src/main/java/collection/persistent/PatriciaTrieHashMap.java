@@ -106,7 +106,7 @@ public final class PatriciaTrieHashMap<K, V> implements Map<K, V> {
 
     @Override
     public List<Entry<K, V>> list() {
-      return new ListImpl.LeafLevel<K, V>(null, this);
+      return new ListImpl<K, V>(null, this);
     }
 
     @Override
@@ -286,86 +286,72 @@ public final class PatriciaTrieHashMap<K, V> implements Map<K, V> {
 
     @Override
     public List<Entry<K, V>> list() {
-      return new ListImpl.TreeLevel<K, V>(null, this, false).findLeaf();
+      return new ListParent<K, V>(null, this, false).findLeaf();
     }
   }
 
-  /**
-   * Implements list of map entries.
-   *
-   * @param <K> Key type.
-   * @param <V> Value type.
-   */
-  private abstract static class ListImpl<K, V> {
-    static final class TreeLevel<K, V> extends ListImpl<K, V> {
-      final TreeLevel<K, V> parent;
-      final Tree<K, V> tree;
-      final boolean dir;
+  private static final class ListParent<K, V> {
+    final ListParent<K, V> parent;
+    final Tree<K, V> tree;
+    final boolean dir;
 
-      TreeLevel(TreeLevel<K, V> parent, Tree<K, V> tree, boolean dir) {
-        this.parent = parent;
-        this.tree = tree;
-        this.dir = dir;
+    ListParent(ListParent<K, V> parent, Tree<K, V> tree, boolean dir) {
+      this.parent = parent;
+      this.tree = tree;
+      this.dir = dir;
+    }
+
+    List<Entry<K, V>> findLeaf() {
+      Node<K, V> node = dir ? tree.right : tree.left;
+      if (node instanceof Tree) {
+        return new ListParent<K, V>(this, (Tree<K, V>) node, false).findLeaf();
       }
-
-      List<Entry<K, V>> findLeaf() {
-        Node<K, V> node = dir ? tree.right : tree.left;
-        if (node instanceof Tree) {
-          return new TreeLevel<K, V>(this, (Tree<K, V>) node, false).findLeaf();
-        }
-        else {
-          return new LeafLevel<K, V>(this, (Leaf<K, V>) node);
-        }
-      }
-
-      List<Entry<K, V>> tail() {
-        if (!dir) {
-          return new TreeLevel<K, V>(parent, tree, true).findLeaf();
-        }
-        if (parent != null) {
-          return parent.tail();
-        }
-        return null;
+      else {
+        return new ListImpl<K, V>(this, (Leaf<K, V>) node);
       }
     }
 
-    static final class LeafLevel<K, V> extends ListImpl<K, V>
-        implements List<Entry<K, V>> {
-      final TreeLevel<K, V> parent;
-      final Leaf<K, V> leaf;
-      List<Entry<K, V>> tail;
-
-      LeafLevel(TreeLevel<K, V> parent, Leaf<K, V> leaf) {
-        this.parent = parent;
-        this.leaf = leaf;
+    List<Entry<K, V>> tail() {
+      if (!dir) {
+        return new ListParent<K, V>(parent, tree, true).findLeaf();
       }
-
-      @Override
-      public Leaf<K, V> head() {
-        return leaf;
+      if (parent != null) {
+        return parent.tail();
       }
-
-      @Override
-      public synchronized List<Entry<K, V>> tail() {
-        if (tail == null) {
-          if (leaf.next != null) {
-            tail = new LeafLevel<K, V>(parent, leaf.next);
-          }
-          else if (parent != null) {
-            tail = parent.tail();
-          }
-        }
-        return tail;
-      }
+      return null;
     }
   }
 
-  /**
-   * Implements thread-unsafe iterator over map entries.
-   *
-   * @param <K> Key type.
-   * @param <V> Value type.
-   */
+  private static final class ListImpl<K, V>
+      implements List<Entry<K, V>> {
+    final ListParent<K, V> parent;
+    final Leaf<K, V> leaf;
+    List<Entry<K, V>> tail;
+
+    ListImpl(ListParent<K, V> parent, Leaf<K, V> leaf) {
+      this.parent = parent;
+      this.leaf = leaf;
+    }
+
+    @Override
+    public Leaf<K, V> head() {
+      return leaf;
+    }
+
+    @Override
+    public synchronized List<Entry<K, V>> tail() {
+      if (tail == null) {
+        if (leaf.next != null) {
+          tail = new ListImpl<K, V>(parent, leaf.next);
+        }
+        else if (parent != null) {
+          tail = parent.tail();
+        }
+      }
+      return tail;
+    }
+  }
+
   private static final class It<K, V> implements Iterator<Entry<K, V>> {
     abstract static class Stack<K, V> {
       final Stack<K, V> next;
