@@ -1,8 +1,6 @@
 package collection.persistent.fingertree;
 
-import collection.persistent.Seq;
-
-final class Elem<T> extends Fragment<T> {
+final class Elem<T> implements Measured<Elem<T>, Elem.Size> {
   final T v;
 
   Elem(T v) {
@@ -10,38 +8,47 @@ final class Elem<T> extends Fragment<T> {
   }
 
   @Override
-  T head() {
-    return v;
+  public Size measure(Elem<T> elem) {
+    return Size.ONE;
   }
 
-  @Override
-  Digit<T> asDigit() {
-    throw new IllegalStateException(); // unreachable
-  }
+  static final class Size extends Number implements Monoid<Size> {
+    static final Size ZERO = new Size(0);
+    static final Size ONE = new Size(1);
+    final int size;
 
-  @Override
-  int size() {
-    return 1;
-  }
-
-  @Override
-  T get(int index) {
-    if (index == 0) {
-      return v;
+    Size(int size) {
+      this.size = size;
     }
-    throw new Seq.RangeException();
-  }
 
-  @Override
-  Elem<T> set(int index, T v) {
-    if (index == 0) {
-      return new Elem<T>(v);
+    @Override
+    public Size unit() {
+      return ZERO;
     }
-    throw new Seq.RangeException();
-  }
 
-  @Override
-  void accept(Seq.Visitor<T> visitor) {
-    visitor.visit(v);
+    @Override
+    public Size combine(Size that) {
+      return new Size(size + that.size);
+    }
+
+    @Override
+    public int intValue() {
+      return size;
+    }
+
+    @Override
+    public long longValue() {
+      return size;
+    }
+
+    @Override
+    public float floatValue() {
+      return size;
+    }
+
+    @Override
+    public double doubleValue() {
+      return size;
+    }
   }
 }
