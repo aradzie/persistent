@@ -12,6 +12,24 @@ final class Elem<T> implements Measured<Elem.Size> {
     return Size.ONE;
   }
 
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) { return true; }
+    if (!(o instanceof Elem)) { return false; }
+    Elem elem = (Elem) o;
+    return !(v != null ? !v.equals(elem.v) : elem.v != null);
+  }
+
+  @Override
+  public int hashCode() {
+    return v != null ? v.hashCode() : 0;
+  }
+
+  @Override
+  public String toString() {
+    return String.valueOf(v);
+  }
+
   static final class Size extends Number implements Monoid<Size>, Comparable<Size> {
     static final Size ZERO = new Size(0);
     static final Size ONE = new Size(1);

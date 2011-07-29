@@ -6,6 +6,18 @@ abstract class Digit<M extends Monoid<M>, T extends Measured<M>>
 
   abstract Deep<M, T> snocImpl(Digit<M, T> l, FingerTree<M, Node<M, T>> m, T v);
 
+  abstract T headL();
+
+  abstract Digit<M, T> tailL();
+
+  abstract T headR();
+
+  abstract Digit<M, T> tailR();
+
+  abstract FingerTree<M, T> toTreeL();
+
+  abstract FingerTree<M, T> toTreeR();
+
   static final class One<M extends Monoid<M>, T extends Measured<M>>
       extends Digit<M, T> {
     final T a;
@@ -29,6 +41,36 @@ abstract class Digit<M extends Monoid<M>, T extends Measured<M>>
     @Override
     Deep<M, T> snocImpl(Digit<M, T> l, FingerTree<M, Node<M, T>> m, T v) {
       return new Deep<M, T>(l, m, new Two<M, T>(a, v));
+    }
+
+    @Override
+    T headL() {
+      return a;
+    }
+
+    @Override
+    Digit<M, T> tailL() {
+      return null;
+    }
+
+    @Override
+    T headR() {
+      return a;
+    }
+
+    @Override
+    Digit<M, T> tailR() {
+      return null;
+    }
+
+    @Override
+    FingerTree<M, T> toTreeL() {
+      return new Single<M, T>(a);
+    }
+
+    @Override
+    FingerTree<M, T> toTreeR() {
+      return new Single<M, T>(a);
     }
   }
 
@@ -58,6 +100,36 @@ abstract class Digit<M extends Monoid<M>, T extends Measured<M>>
     @Override
     Deep<M, T> snocImpl(Digit<M, T> l, FingerTree<M, Node<M, T>> m, T v) {
       return new Deep<M, T>(l, m, new Three<M, T>(a, b, v));
+    }
+
+    @Override
+    T headL() {
+      return a;
+    }
+
+    @Override
+    Digit<M, T> tailL() {
+      return new One<M, T>(b);
+    }
+
+    @Override
+    T headR() {
+      return b;
+    }
+
+    @Override
+    Digit<M, T> tailR() {
+      return new One<M, T>(a);
+    }
+
+    @Override
+    FingerTree<M, T> toTreeL() {
+      return new Single<M, T>(a).cons(b);
+    }
+
+    @Override
+    FingerTree<M, T> toTreeR() {
+      return new Single<M, T>(a).snoc(b);
     }
   }
 
@@ -90,6 +162,36 @@ abstract class Digit<M extends Monoid<M>, T extends Measured<M>>
     @Override
     Deep<M, T> snocImpl(Digit<M, T> l, FingerTree<M, Node<M, T>> m, T v) {
       return new Deep<M, T>(l, m, new Four<M, T>(a, b, c, v));
+    }
+
+    @Override
+    T headL() {
+      return a;
+    }
+
+    @Override
+    Digit<M, T> tailL() {
+      return new Two<M, T>(b, c);
+    }
+
+    @Override
+    T headR() {
+      return c;
+    }
+
+    @Override
+    Digit<M, T> tailR() {
+      return new Two<M, T>(a, b);
+    }
+
+    @Override
+    FingerTree<M, T> toTreeL() {
+      return new Single<M, T>(a).cons(b).cons(c);
+    }
+
+    @Override
+    FingerTree<M, T> toTreeR() {
+      return new Single<M, T>(a).snoc(b).snoc(c);
     }
   }
 
@@ -127,6 +229,36 @@ abstract class Digit<M extends Monoid<M>, T extends Measured<M>>
     Deep<M, T> snocImpl(Digit<M, T> l, FingerTree<M, Node<M, T>> m, T v) {
       return new Deep<M, T>(
           l, m.snoc(new Node.Node3<M, T>(a, b, c)), new Two<M, T>(d, v));
+    }
+
+    @Override
+    T headL() {
+      return a;
+    }
+
+    @Override
+    Digit<M, T> tailL() {
+      return new Three<M, T>(b, c, d);
+    }
+
+    @Override
+    T headR() {
+      return d;
+    }
+
+    @Override
+    Digit<M, T> tailR() {
+      return new Three<M, T>(a, b, c);
+    }
+
+    @Override
+    FingerTree<M, T> toTreeL() {
+      return new Single<M, T>(a).cons(b).cons(c).cons(d);
+    }
+
+    @Override
+    FingerTree<M, T> toTreeR() {
+      return new Single<M, T>(a).snoc(b).snoc(c).snoc(d);
     }
   }
 }

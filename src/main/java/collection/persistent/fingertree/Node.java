@@ -2,6 +2,8 @@ package collection.persistent.fingertree;
 
 abstract class Node<M extends Monoid<M>, T extends Measured<M>>
     implements Measured<M> {
+  abstract Digit<M, T> toDigit();
+
   static final class Node2<M extends Monoid<M>, T extends Measured<M>>
       extends Node<M, T> {
     final T a, b;
@@ -17,6 +19,11 @@ abstract class Node<M extends Monoid<M>, T extends Measured<M>>
     @Override
     public M measure() {
       return m;
+    }
+
+    @Override
+    Digit<M, T> toDigit() {
+      return new Digit.Two<M, T>(a, b);
     }
   }
 
@@ -37,6 +44,11 @@ abstract class Node<M extends Monoid<M>, T extends Measured<M>>
     @Override
     public M measure() {
       return m;
+    }
+
+    @Override
+    Digit<M, T> toDigit() {
+      return new Digit.Three<M, T>(a, b, c);
     }
   }
 }

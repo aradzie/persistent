@@ -30,4 +30,14 @@ final class Deep<M extends Monoid<M>, T extends Measured<M>>
   FingerTree<M, T> snoc(T v) {
     return r.snocImpl(l, d, v);
   }
+
+  @Override
+  public View<M, T> viewL() {
+    return new View<M, T>(l.headL(), deepL(l.tailL(), d, r));
+  }
+
+  @Override
+  public View<M, T> viewR() {
+    return new View<M, T>(r.headR(), deepR(l, d, r.tailR()));
+  }
 }
