@@ -1,6 +1,6 @@
 package collection.persistent.fingertree;
 
-final class Elem<T> implements Measured<Elem<T>, Elem.Size> {
+final class Elem<T> implements Measured<Elem.Size> {
   final T v;
 
   Elem(T v) {
@@ -8,11 +8,11 @@ final class Elem<T> implements Measured<Elem<T>, Elem.Size> {
   }
 
   @Override
-  public Size measure(Elem<T> elem) {
+  public Size measure() {
     return Size.ONE;
   }
 
-  static final class Size extends Number implements Monoid<Size> {
+  static final class Size extends Number implements Monoid<Size>, Comparable<Size> {
     static final Size ZERO = new Size(0);
     static final Size ONE = new Size(1);
     final int size;
@@ -49,6 +49,28 @@ final class Elem<T> implements Measured<Elem<T>, Elem.Size> {
     @Override
     public double doubleValue() {
       return size;
+    }
+
+    @Override
+    public int compareTo(Size o) {
+      return size - o.size;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+      if (this == o) { return true; }
+      if (!(o instanceof Size)) { return false; }
+      return size == ((Size) o).size;
+    }
+
+    @Override
+    public int hashCode() {
+      return size;
+    }
+
+    @Override
+    public String toString() {
+      return String.valueOf(size);
     }
   }
 }

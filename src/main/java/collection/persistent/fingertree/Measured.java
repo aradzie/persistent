@@ -1,5 +1,5 @@
 package collection.persistent.fingertree;
 
-public interface Measured<V, M extends Monoid<M>> {
-  M measure(V v);
+public interface Measured<M extends Monoid<M>> {
+  M measure();
 }

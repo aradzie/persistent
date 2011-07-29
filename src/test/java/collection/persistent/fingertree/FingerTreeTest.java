@@ -5,7 +5,8 @@ import org.junit.Test;
 public class FingerTreeTest {
   @Test
   public void test() {
-    FingerTree<Elem<String>> tree = new FingerTree.Empty<Elem<String>>();
+    FingerTree<Elem.Size, Elem<String>> tree =
+        new FingerTree.Empty<Elem.Size, Elem<String>>(Elem.Size.ZERO);
     tree = tree.cons(new Elem<String>("hello"));
     tree = tree.cons(new Elem<String>("world"));
     tree = tree.cons(new Elem<String>("one"));
