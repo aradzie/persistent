@@ -1,5 +1,7 @@
 package collection.persistent.fingertree;
 
+import java.util.List;
+
 abstract class Digit<M extends Monoid<M>, T extends Measured<M>>
     implements Measured<M> {
   abstract Deep<M, T> consImpl(T v, FingerTree<M, Node<M, T>> m, Digit<M, T> r);
@@ -17,6 +19,8 @@ abstract class Digit<M extends Monoid<M>, T extends Measured<M>>
   abstract FingerTree<M, T> toTreeL();
 
   abstract FingerTree<M, T> toTreeR();
+
+  abstract void append(List<T> l);
 
   static final class One<M extends Monoid<M>, T extends Measured<M>>
       extends Digit<M, T> {
@@ -71,6 +75,11 @@ abstract class Digit<M extends Monoid<M>, T extends Measured<M>>
     @Override
     FingerTree<M, T> toTreeR() {
       return new Single<M, T>(a);
+    }
+
+    @Override
+    void append(List<T> l) {
+      l.add(a);
     }
   }
 
@@ -130,6 +139,12 @@ abstract class Digit<M extends Monoid<M>, T extends Measured<M>>
     @Override
     FingerTree<M, T> toTreeR() {
       return new Single<M, T>(a).snoc(b);
+    }
+
+    @Override
+    void append(List<T> l) {
+      l.add(a);
+      l.add(b);
     }
   }
 
@@ -192,6 +207,13 @@ abstract class Digit<M extends Monoid<M>, T extends Measured<M>>
     @Override
     FingerTree<M, T> toTreeR() {
       return new Single<M, T>(a).snoc(b).snoc(c);
+    }
+
+    @Override
+    void append(List<T> l) {
+      l.add(a);
+      l.add(b);
+      l.add(c);
     }
   }
 
@@ -259,6 +281,14 @@ abstract class Digit<M extends Monoid<M>, T extends Measured<M>>
     @Override
     FingerTree<M, T> toTreeR() {
       return new Single<M, T>(a).snoc(b).snoc(c).snoc(d);
+    }
+
+    @Override
+    void append(List<T> l) {
+      l.add(a);
+      l.add(b);
+      l.add(c);
+      l.add(d);
     }
   }
 }

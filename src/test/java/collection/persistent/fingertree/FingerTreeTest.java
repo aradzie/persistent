@@ -80,4 +80,56 @@ public class FingerTreeTest {
     assertEquals("five", v.elem().v);
     t = v.tree();
   }
+
+  @Test
+  public void concat() {
+    FingerTree<Elem.Size, Elem<String>> a =
+        new FingerTree.Empty<Elem.Size, Elem<String>>(Elem.Size.ZERO);
+    FingerTree<Elem.Size, Elem<String>> b =
+        new FingerTree.Empty<Elem.Size, Elem<String>>(Elem.Size.ZERO);
+    FingerTree.View<Elem.Size, Elem<String>> view;
+
+    a = a.cons(new Elem<String>("e"));
+    a = a.cons(new Elem<String>("d"));
+    a = a.cons(new Elem<String>("c"));
+    a = a.cons(new Elem<String>("b"));
+    a = a.cons(new Elem<String>("a"));
+
+    b = b.cons(new Elem<String>("4"));
+    b = b.cons(new Elem<String>("3"));
+    b = b.cons(new Elem<String>("2"));
+    b = b.cons(new Elem<String>("1"));
+
+    System.out.println("tree A");
+    view = a.viewL();
+    while (view != null) {
+      System.out.println(view.elem().v);
+      view = view.tree().viewL();
+    }
+
+    System.out.println("tree B");
+    view = b.viewL();
+    while (view != null) {
+      System.out.println(view.elem().v);
+      view = view.tree().viewL();
+    }
+
+    FingerTree<Elem.Size, Elem<String>> tree = FingerTree.concat(a, b);
+
+    System.out.println("joined");
+    view = tree.viewL();
+    while (view != null) {
+      System.out.println(view.elem().v);
+      view = view.tree().viewL();
+    }
+
+    tree = FingerTree.concat(tree, tree);
+
+    System.out.println("joined*joined");
+    view = tree.viewL();
+    while (view != null) {
+      System.out.println(view.elem().v);
+      view = view.tree().viewL();
+    }
+  }
 }
