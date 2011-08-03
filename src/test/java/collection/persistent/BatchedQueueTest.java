@@ -4,10 +4,10 @@ import org.junit.Test;
 
 import static org.junit.Assert.*;
 
-public class QueueTest {
+public class BatchedQueueTest {
   @Test
   public void test() {
-    Queue<Integer> q = new Queue<Integer>();
+    BatchedQueue<Integer> q = new BatchedQueue<Integer>();
     assertEquals(0, q.size());
     assertTrue(q.isEmpty());
     q = q.push(1).push(2).push(3);

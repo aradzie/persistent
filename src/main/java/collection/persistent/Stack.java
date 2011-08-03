@@ -73,7 +73,7 @@ public final class Stack<T> {
    *         but with reversed order.
    */
   public Stack<T> reverse() {
-    if (isEmpty()) {
+    if (isEmpty() || next.isEmpty()) {
       return this;
     }
     else {

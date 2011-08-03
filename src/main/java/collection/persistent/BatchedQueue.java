@@ -8,15 +8,15 @@ import java.util.NoSuchElementException;
  *
  * @param <T> Element type.
  */
-public final class Queue<T> {
+public final class BatchedQueue<T> {
   private final Stack<T> b;
   private final Stack<T> f;
 
-  public Queue() {
+  public BatchedQueue() {
     b = f = new Stack<T>();
   }
 
-  private Queue(Stack<T> b, Stack<T> f) {
+  private BatchedQueue(Stack<T> b, Stack<T> f) {
     this.b = b;
     this.f = f;
   }
@@ -31,39 +31,33 @@ public final class Queue<T> {
    *         <code>false</code> otherwise.
    */
   public boolean isEmpty() {
-    return b.isEmpty() && f.isEmpty();
+    return f.isEmpty();
   }
 
-  public Queue<T> push(T v) {
-    if (isEmpty()) {
-      return new Queue<T>(b, f.push(v));
-    }
-    else {
-      return new Queue<T>(b.push(v), f);
-    }
+  public BatchedQueue<T> push(T v) {
+    return check(b.push(v), f);
   }
 
   public T peek() {
     if (isEmpty()) {
       throw new NoSuchElementException();
     }
-    if (f.isEmpty()) {
-      return b.reverse().peek();
-    }
-    else {
-      return f.peek();
-    }
+    return f.peek();
   }
 
-  public Queue<T> pop() {
+  public BatchedQueue<T> pop() {
     if (isEmpty()) {
       throw new NoSuchElementException();
     }
+    return check(b, f.pop());
+  }
+
+  private static <T> BatchedQueue<T> check(Stack<T> b, Stack<T> f) {
     if (f.isEmpty()) {
-      return new Queue<T>(f, b.reverse().pop());
+      return new BatchedQueue<T>(f, b.reverse());
     }
     else {
-      return new Queue<T>(b, f.pop());
+      return new BatchedQueue<T>(b, f);
     }
   }
 }
