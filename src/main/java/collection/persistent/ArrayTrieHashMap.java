@@ -310,10 +310,14 @@ public final class ArrayTrieHashMap<K, V> implements Map<K, V> {
         return this;
       }
       if (result == null) {
-        if ((mask & ~(1 << index)) == 0) {
-          return null; // Removed last entry from this tree.
+        int m = mask & ~(1 << index);
+        if (m == 0) {
+          // Removed last entry from this tree.
+          return null;
         }
-        // TODO contract tables with only one entry
+        if ((m & (m - 1)) == 0) {
+          // TODO contract tables with only one entry
+        }
       }
       return new Tree<K, V>(this, result, index);
     }
