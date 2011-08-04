@@ -8,7 +8,7 @@ import java.util.NoSuchElementException;
  *
  * @param <T> Element type.
  */
-public final class BatchedQueue<T> {
+public final class BatchedQueue<T> implements Queue<T> {
   private final Stack<T> b;
   private final Stack<T> f;
 
@@ -21,23 +21,22 @@ public final class BatchedQueue<T> {
     this.f = f;
   }
 
-  /** @return Number of elements in this queue instance. */
+  @Override
   public int size() {
     return b.size() + f.size();
   }
 
-  /**
-   * @return <code>true</code> if this queue is empty,
-   *         <code>false</code> otherwise.
-   */
+  @Override
   public boolean isEmpty() {
     return f.isEmpty();
   }
 
+  @Override
   public BatchedQueue<T> push(T v) {
     return check(b.push(v), f);
   }
 
+  @Override
   public T peek() {
     if (isEmpty()) {
       throw new NoSuchElementException();
@@ -45,6 +44,7 @@ public final class BatchedQueue<T> {
     return f.peek();
   }
 
+  @Override
   public BatchedQueue<T> pop() {
     if (isEmpty()) {
       throw new NoSuchElementException();
