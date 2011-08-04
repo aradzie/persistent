@@ -35,9 +35,9 @@ public final class Cell<T> implements Tail<T> {
       return b.eval();
     }
     else {
-      return new Cell<T>(a.value(), new Memoized<T>() {
+      return new Cell<T>(a.value(), new Tail<T>() {
         @Override
-        protected Cell<T> doEval() {
+        public Cell<T> eval() {
           return concat(a.tail(), b);
         }
       });
@@ -59,9 +59,9 @@ public final class Cell<T> implements Tail<T> {
 
   public static <T> Cell<T> take(final Cell<T> head, final int n) {
     if (n > 0) {
-      return new Cell<T>(head.value(), new Memoized<T>() {
+      return new Cell<T>(head.value(), new Tail<T>() {
         @Override
-        protected Cell<T> doEval() {
+        public Cell<T> eval() {
           return take(head.tail(), n - 1);
         }
       });
