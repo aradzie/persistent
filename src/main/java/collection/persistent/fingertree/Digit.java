@@ -4,9 +4,9 @@ import java.util.List;
 
 abstract class Digit<M extends Monoid<M>, T extends Measured<M>>
     implements Measured<M> {
-  abstract Deep<M, T> consImpl(T v, FingerTree<M, Node<M, T>> m, Digit<M, T> r);
+  abstract FingerTree.Deep<M, T> consImpl(T v, FingerTree<M, Node<M, T>> m, Digit<M, T> r);
 
-  abstract Deep<M, T> snocImpl(Digit<M, T> l, FingerTree<M, Node<M, T>> m, T v);
+  abstract FingerTree.Deep<M, T> snocImpl(Digit<M, T> l, FingerTree<M, Node<M, T>> m, T v);
 
   abstract T headL();
 
@@ -38,13 +38,13 @@ abstract class Digit<M extends Monoid<M>, T extends Measured<M>>
     }
 
     @Override
-    Deep<M, T> consImpl(T v, FingerTree<M, Node<M, T>> m, Digit<M, T> r) {
-      return new Deep<M, T>(new Two<M, T>(v, a), m, r);
+    FingerTree.Deep<M, T> consImpl(T v, FingerTree<M, Node<M, T>> m, Digit<M, T> r) {
+      return new FingerTree.Deep<M, T>(new Two<M, T>(v, a), m, r);
     }
 
     @Override
-    Deep<M, T> snocImpl(Digit<M, T> l, FingerTree<M, Node<M, T>> m, T v) {
-      return new Deep<M, T>(l, m, new Two<M, T>(a, v));
+    FingerTree.Deep<M, T> snocImpl(Digit<M, T> l, FingerTree<M, Node<M, T>> m, T v) {
+      return new FingerTree.Deep<M, T>(l, m, new Two<M, T>(a, v));
     }
 
     @Override
@@ -69,12 +69,12 @@ abstract class Digit<M extends Monoid<M>, T extends Measured<M>>
 
     @Override
     FingerTree<M, T> toTreeL() {
-      return new Single<M, T>(a);
+      return new FingerTree.Single<M, T>(a);
     }
 
     @Override
     FingerTree<M, T> toTreeR() {
-      return new Single<M, T>(a);
+      return new FingerTree.Single<M, T>(a);
     }
 
     @Override
@@ -102,13 +102,13 @@ abstract class Digit<M extends Monoid<M>, T extends Measured<M>>
     }
 
     @Override
-    Deep<M, T> consImpl(T v, FingerTree<M, Node<M, T>> m, Digit<M, T> r) {
-      return new Deep<M, T>(new Three<M, T>(v, a, b), m, r);
+    FingerTree.Deep<M, T> consImpl(T v, FingerTree<M, Node<M, T>> m, Digit<M, T> r) {
+      return new FingerTree.Deep<M, T>(new Three<M, T>(v, a, b), m, r);
     }
 
     @Override
-    Deep<M, T> snocImpl(Digit<M, T> l, FingerTree<M, Node<M, T>> m, T v) {
-      return new Deep<M, T>(l, m, new Three<M, T>(a, b, v));
+    FingerTree.Deep<M, T> snocImpl(Digit<M, T> l, FingerTree<M, Node<M, T>> m, T v) {
+      return new FingerTree.Deep<M, T>(l, m, new Three<M, T>(a, b, v));
     }
 
     @Override
@@ -133,12 +133,12 @@ abstract class Digit<M extends Monoid<M>, T extends Measured<M>>
 
     @Override
     FingerTree<M, T> toTreeL() {
-      return new Single<M, T>(a).cons(b);
+      return new FingerTree.Single<M, T>(a).cons(b);
     }
 
     @Override
     FingerTree<M, T> toTreeR() {
-      return new Single<M, T>(a).snoc(b);
+      return new FingerTree.Single<M, T>(a).snoc(b);
     }
 
     @Override
@@ -170,13 +170,13 @@ abstract class Digit<M extends Monoid<M>, T extends Measured<M>>
     }
 
     @Override
-    Deep<M, T> consImpl(T v, FingerTree<M, Node<M, T>> m, Digit<M, T> r) {
-      return new Deep<M, T>(new Four<M, T>(v, a, b, c), m, r);
+    FingerTree.Deep<M, T> consImpl(T v, FingerTree<M, Node<M, T>> m, Digit<M, T> r) {
+      return new FingerTree.Deep<M, T>(new Four<M, T>(v, a, b, c), m, r);
     }
 
     @Override
-    Deep<M, T> snocImpl(Digit<M, T> l, FingerTree<M, Node<M, T>> m, T v) {
-      return new Deep<M, T>(l, m, new Four<M, T>(a, b, c, v));
+    FingerTree.Deep<M, T> snocImpl(Digit<M, T> l, FingerTree<M, Node<M, T>> m, T v) {
+      return new FingerTree.Deep<M, T>(l, m, new Four<M, T>(a, b, c, v));
     }
 
     @Override
@@ -201,12 +201,12 @@ abstract class Digit<M extends Monoid<M>, T extends Measured<M>>
 
     @Override
     FingerTree<M, T> toTreeL() {
-      return new Single<M, T>(a).cons(b).cons(c);
+      return new FingerTree.Single<M, T>(a).cons(b).cons(c);
     }
 
     @Override
     FingerTree<M, T> toTreeR() {
-      return new Single<M, T>(a).snoc(b).snoc(c);
+      return new FingerTree.Single<M, T>(a).snoc(b).snoc(c);
     }
 
     @Override
@@ -242,14 +242,14 @@ abstract class Digit<M extends Monoid<M>, T extends Measured<M>>
     }
 
     @Override
-    Deep<M, T> consImpl(T v, FingerTree<M, Node<M, T>> m, Digit<M, T> r) {
-      return new Deep<M, T>(
+    FingerTree.Deep<M, T> consImpl(T v, FingerTree<M, Node<M, T>> m, Digit<M, T> r) {
+      return new FingerTree.Deep<M, T>(
           new Two<M, T>(v, a), m.cons(new Node.Node3<M, T>(b, c, d)), r);
     }
 
     @Override
-    Deep<M, T> snocImpl(Digit<M, T> l, FingerTree<M, Node<M, T>> m, T v) {
-      return new Deep<M, T>(
+    FingerTree.Deep<M, T> snocImpl(Digit<M, T> l, FingerTree<M, Node<M, T>> m, T v) {
+      return new FingerTree.Deep<M, T>(
           l, m.snoc(new Node.Node3<M, T>(a, b, c)), new Two<M, T>(d, v));
     }
 
@@ -275,12 +275,12 @@ abstract class Digit<M extends Monoid<M>, T extends Measured<M>>
 
     @Override
     FingerTree<M, T> toTreeL() {
-      return new Single<M, T>(a).cons(b).cons(c).cons(d);
+      return new FingerTree.Single<M, T>(a).cons(b).cons(c).cons(d);
     }
 
     @Override
     FingerTree<M, T> toTreeR() {
-      return new Single<M, T>(a).snoc(b).snoc(c).snoc(d);
+      return new FingerTree.Single<M, T>(a).snoc(b).snoc(c).snoc(d);
     }
 
     @Override

@@ -140,7 +140,7 @@ public abstract class FingerTree<M extends Monoid<M>, T extends Measured<M>>
     return l.toTreeR();
   }
 
-  public static class Empty<M extends Monoid<M>, T extends Measured<M>>
+  public static final class Empty<M extends Monoid<M>, T extends Measured<M>>
       extends FingerTree<M, T> {
     final M m;
 
@@ -171,6 +171,90 @@ public abstract class FingerTree<M extends Monoid<M>, T extends Measured<M>>
     @Override
     public View<M, T> viewR() {
       return null;
+    }
+  }
+
+  static final class Single<M extends Monoid<M>, T extends Measured<M>>
+      extends FingerTree<M, T> {
+    final T v;
+    final M m;
+
+    Single(T v) {
+      this.v = v;
+      m = v.measure();
+    }
+
+    @Override
+    public M measure() {
+      return m;
+    }
+
+    @Override
+    FingerTree<M, T> cons(T v) {
+      return new Deep<M, T>(
+          new Digit.One<M, T>(v),
+          new Empty<M, Node<M, T>>(m.unit()),
+          new Digit.One<M, T>(this.v));
+    }
+
+    @Override
+    FingerTree<M, T> snoc(T v) {
+      return new Deep<M, T>(
+          new Digit.One<M, T>(this.v),
+          new Empty<M, Node<M, T>>(m.unit()),
+          new Digit.One<M, T>(v));
+    }
+
+    @Override
+    public View<M, T> viewL() {
+      return new View<M, T>(v, new Empty<M, T>(m.unit()));
+    }
+
+    @Override
+    public View<M, T> viewR() {
+      return new View<M, T>(v, new Empty<M, T>(m.unit()));
+    }
+  }
+
+  static final class Deep<M extends Monoid<M>, T extends Measured<M>>
+      extends FingerTree<M, T> {
+    final Digit<M, T> l;
+    final FingerTree<M, Node<M, T>> d;
+    final Digit<M, T> r;
+    final M m;
+
+    Deep(Digit<M, T> l, FingerTree<M, Node<M, T>> d, Digit<M, T> r) {
+      this.l = l;
+      this.d = d;
+      this.r = r;
+      m = l.measure()
+          .combine(d.measure())
+          .combine(r.measure());
+    }
+
+    @Override
+    public M measure() {
+      return m;
+    }
+
+    @Override
+    FingerTree<M, T> cons(T v) {
+      return l.consImpl(v, d, r);
+    }
+
+    @Override
+    FingerTree<M, T> snoc(T v) {
+      return r.snocImpl(l, d, v);
+    }
+
+    @Override
+    public View<M, T> viewL() {
+      return new View<M, T>(l.headL(), deepL(l.tailL(), d, r));
+    }
+
+    @Override
+    public View<M, T> viewR() {
+      return new View<M, T>(r.headR(), deepR(l, d, r.tailR()));
     }
   }
 }
